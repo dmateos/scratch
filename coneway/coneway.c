@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <SDL/SDL.h>
 
-#define X 50
-#define Y 50
+#define X 100
+#define Y 100
 
 #define BSIZE 10 /* Squared. */
 
-#define DEBUG
+//#define DEBUG
 
 struct pool {
     char data[Y][X];
@@ -134,10 +134,11 @@ int main(int argc, char **argv) {
     struct pool pool;
     SDL_Surface *display;
     SDL_Event event;
-    unsigned long gencount;
+    int gencount, go, simspeed;
 
     memset(&pool, 0, sizeof(pool));
-    gencount = 0;
+    gencount = go = 0;
+    simspeed = 1000;
 
     /* Toad oscilator. Ocelates for infinity*/
     pool.data[7][9] = 1;
@@ -152,13 +153,23 @@ int main(int argc, char **argv) {
     pool.data[12][13] = 1;
     pool.data[12][14] = 1;
 
-    /* The infamous F-pentomino, dies after 130 gens appar */
-    pool.data[32][24] = 1;
-    pool.data[32][23] = 1;
-    pool.data[33][23] = 1;
-    pool.data[33][22] = 1;
-    pool.data[34][23] = 1;
+    /* The infamous F-pentomino. */
+    //pool.data[32][54] = 1;
+    //pool.data[32][53] = 1;
+    //pool.data[33][53] = 1;
+    //pool.data[33][52] = 1;
+    //pool.data[34][53] = 1;
 
+    /* Die hard, dies after 130 its. */
+    pool.data[70][50] = 1;
+    pool.data[70][51] = 1;
+    pool.data[71][51] = 1;
+    pool.data[69][56] = 1;
+    pool.data[71][55] = 1;
+    pool.data[71][56] = 1;
+    pool.data[71][57] = 1;
+    
+    /* Die hard. Should die after 130 gens. */
     /* Init SDL, display and TTF for font drawing. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.");
@@ -168,9 +179,13 @@ int main(int argc, char **argv) {
 
     SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
     while(1) {
-        comp_pool(&pool);
         render_pool(display, &pool);
-        gencount++;
+
+        if(go) {
+            comp_pool(&pool);
+            gencount++;
+            printf("gen: %d\n", gencount);
+        }
 
         /* SDL event capture. */
         while(SDL_PollEvent(&event)) {
@@ -178,12 +193,29 @@ int main(int argc, char **argv) {
                 case SDL_QUIT:
                     oshit(&pool, "Exited");
                     break;
-                default:
-                    break;
+                case SDL_KEYDOWN:
+                    switch(event.key.keysym.sym) {
+                        case SDLK_q:
+                            oshit(&pool, "Exited");
+                            break;
+                        /* Pause/Go */
+                        case SDLK_g:
+                            (go == 0) ? (go = 1) : (go = 0);
+                            break;
+                        /* Sim speed  */
+                        case SDLK_p:
+                            (simspeed+100 <= 10000) ? (simspeed += 100) : 0;
+                            break;
+                        case SDLK_o:
+                            (simspeed-100 >= 0) ? (simspeed -= 100) : 0;
+                            break;
+                        default:
+                            break;
+                    }
+                break;
             }
         }
-        SDL_Delay(1000);
+        SDL_Delay(simspeed);
     }
-    SDL_Quit();
     return 0;
 }
