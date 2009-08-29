@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     memset(&pool, 0, sizeof(pool));
     gencount = go = 0;
     mainloop = 1;
-    simspeed = 1000;
+    simspeed = 500;
 
     /* Toad oscilator. Ocelates for infinity*/
     pool.data[9][7] = 1;
@@ -195,6 +195,19 @@ int main(int argc, char **argv) {
             sprintf(wmtbuff, "Generation: %d. Delay: %dms", gencount, simspeed);
             SDL_WM_SetCaption(wmtbuff, NULL);
         }
+        /* If not going, check for user clicks for cell placement. */
+        else {
+            mousemask = SDL_GetMouseState(&mousex, &mousey);
+            /* Add cell. */
+            if(mousemask & SDL_BUTTON(1)) {
+                pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
+                render_pool(display, &pool);
+            }
+            if(mousemask & SDL_BUTTON(3)) {
+                pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
+                render_pool(display, &pool);
+            }
+        }
 
         /* USER IO capture.. */
         while(SDL_PollEvent(&event)) {
@@ -225,14 +238,6 @@ int main(int argc, char **argv) {
             }
         }
         
-        /* If not going, place new cells where the user clicks. */
-        if(!go) {
-            mousemask = SDL_GetMouseState(&mousex, &mousey);
-            if(mousemask & SDL_BUTTON(1)) {
-                pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
-                render_pool(display, &pool);
-            }
-        }
 
         SDL_Delay(simspeed);
     }
