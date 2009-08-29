@@ -10,7 +10,7 @@
 //#define DEBUG
 
 struct pool {
-    char data[Y][X];
+    char data[X][Y];
 };
 
 void oshit(struct pool *pool, char *msg) {
@@ -20,9 +20,9 @@ void oshit(struct pool *pool, char *msg) {
 #ifdef DEBUG
     /* dump cell array. */
     printf("cell dump\n");
-    for(y = 0; y < Y; y++) {
-        for(x = 0; x < X; x++) {
-            printf("%d ", pool->data[y][x]);
+    for(x = 0; x < X; x++) {
+        for(y = 0; y < Y; y++) {
+            printf("%d ", pool->data[x][y]);
         }
         puts("\n");
     }
@@ -38,11 +38,11 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
     dest.w = BSIZE;
     dest.h = BSIZE;
 
-    for(y = 0; y < Y; y++) {
-        for(x = 0; x < X; x++) {
+    for(x = 0; x < X; x++) {
+        for(y = 0; y < Y; y++) {
             dest.x = x * BSIZE;
             dest.y = y * BSIZE;
-            if(pool->data[y][x] != 0) {
+            if(pool->data[x][y] != 0) {
                 SDL_FillRect(canvas, &dest, color);
             }
             else
@@ -56,28 +56,28 @@ int neighbour_count(int cellx, int celly, struct pool *pool) {
     int ncount = 0;
 
     /* LEFT */
-    if((cellx-1 >= 0) && pool->data[celly][cellx-1])
+    if((cellx-1 >= 0) && pool->data[cellx-1][celly])
         ncount++;
     /* RIGHT */
-    if((cellx+1 < X) && pool->data[celly][cellx+1]) 
+    if((cellx+1 < X) && pool->data[cellx+1][celly]) 
         ncount++;
     /* UP */
-    if((celly-1 >= 0) && pool->data[celly-1][cellx])
+    if((celly-1 >= 0) && pool->data[cellx][celly-1])
         ncount++;
     /* DOWN */
-    if(celly+1 < Y && pool->data[celly+1][cellx])
+    if(celly+1 < Y && pool->data[cellx][celly+1])
         ncount++;
     /* UP LEFT */
-    if((cellx-1 >= 0) && (celly-1 >= 0) && pool->data[celly-1][cellx-1])
+    if((cellx-1 >= 0) && (celly-1 >= 0) && pool->data[cellx-1][celly-1])
         ncount++;
     /* UP RIGHT. */
-    if((cellx+1 < X) && (celly-1 >= 0) && pool->data[celly-1][cellx+1])
+    if((cellx+1 < X) && (celly-1 >= 0) && pool->data[cellx+1][celly-1])
         ncount++;
     /* DOWN LEFT */
-    if((cellx-1 >= 0) && (celly+1 < Y) && pool->data[celly+1][cellx-1])
+    if((cellx-1 >= 0) && (celly+1 < Y) && pool->data[cellx-1][celly+1])
         ncount++;
     /* DOWN RIGHT */ 
-    if((cellx+1 < X) && (celly+1 < Y) && pool->data[celly+1][cellx+1]) 
+    if((cellx+1 < X) && (celly+1 < Y) && pool->data[cellx+1][celly+1]) 
         ncount++;
 
     return ncount;
@@ -92,10 +92,10 @@ int comp_pool(struct pool *pool) {
        reacting at once. */
     memcpy(&snapshot, pool, sizeof(snapshot));
 
-    for(y = 0; y < Y; y++) {
-        for(x = 0; x < X; x++) {
+    for(x = 0; x < X; x++) {
+        for(y = 0; y < Y; y++) {
             neighb = neighbour_count(x, y, &snapshot);
-            cdata = &pool->data[y][x];
+            cdata = &pool->data[x][y];
 
 #ifdef DEBUG
             printf("hits from %dx%d h:%d\n", x, y, neighb);
@@ -140,36 +140,40 @@ int main(int argc, char **argv) {
     gencount = go = 0;
     simspeed = 1000;
 
+
     /* Toad oscilator. Ocelates for infinity*/
-    pool.data[7][9] = 1;
-    pool.data[7][8] = 1;
+    pool.data[9][7] = 1;
+    pool.data[8][7] = 1;
     pool.data[7][7] = 1;
     pool.data[8][8] = 1;
-    pool.data[8][7] = 1;
-    pool.data[8][6] = 1;
+    pool.data[7][8] = 1;
+    pool.data[6][8] = 1;
 
     /* Blinker. Same as aboveish*/
     pool.data[12][12] = 1;
-    pool.data[12][13] = 1;
-    pool.data[12][14] = 1;
-
-    /* The infamous F-pentomino. */
-    //pool.data[32][54] = 1;
-    //pool.data[32][53] = 1;
-    //pool.data[33][53] = 1;
-    //pool.data[33][52] = 1;
-    //pool.data[34][53] = 1;
+    pool.data[13][12] = 1;
+    pool.data[14][12] = 1;
 
     /* Die hard, dies after 130 its. */
-    pool.data[70][50] = 1;
-    pool.data[70][51] = 1;
-    pool.data[71][51] = 1;
-    pool.data[69][56] = 1;
-    pool.data[71][55] = 1;
-    pool.data[71][56] = 1;
-    pool.data[71][57] = 1;
+    pool.data[50][70] = 1;
+    pool.data[51][70] = 1;
+    pool.data[51][71] = 1;
+    pool.data[56][69] = 1;
+    pool.data[55][71] = 1;
+    pool.data[56][71] = 1;
+    pool.data[57][71] = 1;
     
-    /* Die hard. Should die after 130 gens. */
+    /* Another die hard, syncronicity. */
+    pool.data[50][30] = 1;
+    pool.data[51][30] = 1;
+    pool.data[51][31] = 1;
+    pool.data[56][29] = 1;
+    pool.data[55][31] = 1;
+    pool.data[56][31] = 1;
+    pool.data[57][31] = 1;
+
+
+
     /* Init SDL, display and TTF for font drawing. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.");
