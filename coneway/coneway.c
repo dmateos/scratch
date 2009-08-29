@@ -17,6 +17,7 @@ void oshit(struct pool *pool, char *msg) {
     int x, y;
     printf("OH SHIT: %s\n", msg);
 
+    x = y = 0; /* GCC warn on -Wall :/ */
 #ifdef DEBUG
     /* dump cell array. */
     printf("cell dump\n");
@@ -49,6 +50,7 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
         }
     }
     SDL_Flip(canvas);
+    return 0;
 }
 
 int neighbour_count(int cellx, int celly, struct pool *pool) {
@@ -131,13 +133,14 @@ int comp_pool(struct pool *pool) {
 
 int main(int argc, char **argv) {
     struct pool pool;
-    int gencount, go, simspeed;
+    int gencount, go, simspeed, mainloop;
     SDL_Surface *display;
     SDL_Event event;
     char wmtbuff[100];
 
     memset(&pool, 0, sizeof(pool));
     gencount = go = 0;
+    mainloop = 1;
     simspeed = 1000;
 
     /* Toad oscilator. Ocelates for infinity*/
@@ -182,7 +185,7 @@ int main(int argc, char **argv) {
     SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
     render_pool(display, &pool);
 
-    while(1) {
+    while(mainloop) {
         /* If go, comp the pool and render it. */
         if(go) {
             comp_pool(&pool);
@@ -196,12 +199,12 @@ int main(int argc, char **argv) {
         while(SDL_PollEvent(&event)) {
             switch(event.type) {
                 case SDL_QUIT:
-                    oshit(&pool, "Exited");
+                    mainloop = 0;
                     break;
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym) {
                         case SDLK_q:
-                            oshit(&pool, "Exited");
+                            mainloop = 0; 
                             break;
                         /* Pause/Go */
                         case SDLK_g:
@@ -222,5 +225,7 @@ int main(int argc, char **argv) {
         }
         SDL_Delay(simspeed);
     }
+
+    SDL_Quit();
     return 0;
 }
