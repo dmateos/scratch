@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <SDL/SDL.h>
 
 #define X 90
@@ -133,10 +134,10 @@ int comp_pool(struct pool *pool) {
 
 int main(int argc, char **argv) {
     struct pool pool;
-    int gencount, go, simspeed, mainloop;
+    int gencount, go, simspeed, mainloop, mousex, mousey;
     SDL_Surface *display;
     SDL_Event event;
-    char wmtbuff[100];
+    char wmtbuff[100], mousemask;
 
     memset(&pool, 0, sizeof(pool));
     gencount = go = 0;
@@ -191,7 +192,7 @@ int main(int argc, char **argv) {
             comp_pool(&pool);
             render_pool(display, &pool);
             gencount++;
-            sprintf(wmtbuff, "Generation: %d", gencount);
+            sprintf(wmtbuff, "Generation: %d. Delay: %dms", gencount, simspeed);
             SDL_WM_SetCaption(wmtbuff, NULL);
         }
 
@@ -207,7 +208,7 @@ int main(int argc, char **argv) {
                             mainloop = 0; 
                             break;
                         /* Pause/Go */
-                        case SDLK_g:
+                        case SDLK_RETURN:
                             (go == 0) ? (go = 1) : (go = 0);
                             break;
                         /* Sim speed  */
@@ -223,6 +224,16 @@ int main(int argc, char **argv) {
                 break;
             }
         }
+        
+        /* If not going, place new cells where the user clicks. */
+        if(!go) {
+            mousemask = SDL_GetMouseState(&mousex, &mousey);
+            if(mousemask & SDL_BUTTON(1)) {
+                pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
+                render_pool(display, &pool);
+            }
+        }
+
         SDL_Delay(simspeed);
     }
 
