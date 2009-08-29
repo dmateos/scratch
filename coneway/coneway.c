@@ -21,9 +21,9 @@ void oshit(struct pool *pool, char *msg) {
     /* dump cell array. */
     printf("cell dump\n");
     for(x = 0; x < X; x++) {
-        for(y = 0; y < Y; y++) {
+        for(y = 0; y < Y; y++)
             printf("%d ", pool->data[x][y]);
-        }
+
         puts("\n");
     }
 #endif
@@ -31,11 +31,13 @@ void oshit(struct pool *pool, char *msg) {
 }
 
 int render_pool(SDL_Surface *canvas, struct pool *pool) {
-    int x, y, fgcolor, bgcolor;
+    int x, y, fgc, bgc;
     SDL_Rect dest;
 
-    fgcolor = SDL_MapRGB(canvas->format, 0, 0, 0);
-    bgcolor = SDL_MapRGB(canvas->format, 255, 255, 255);
+    /* Background and foreground colors for rendering and 
+       WxH pixels of each cell on screen. */
+    fgc = SDL_MapRGB(canvas->format, 0, 0, 0);
+    bgc = SDL_MapRGB(canvas->format, 255, 255, 255);
     dest.w = BSIZE;
     dest.h = BSIZE;
 
@@ -43,11 +45,7 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
         for(y = 0; y < Y; y++) {
             dest.x = x * BSIZE;
             dest.y = y * BSIZE;
-            if(pool->data[x][y] != 0) {
-                SDL_FillRect(canvas, &dest, fgcolor);
-            }
-            else
-                SDL_FillRect(canvas, &dest, bgcolor);
+            SDL_FillRect(canvas, &dest, (pool->data[x][y] == 1) ? fgc : bgc);
         }
     }
     SDL_Flip(canvas);
@@ -180,19 +178,21 @@ int main(int argc, char **argv) {
     if(!(display = SDL_SetVideoMode(BSIZE*X, BSIZE*Y, 16, SDL_SWSURFACE)))
         oshit(&pool, "SDL Screen mode set");
 
+    /* Set title and render initial setup. */
     SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
+    render_pool(display, &pool);
 
     while(1) {
-        render_pool(display, &pool);
-
+        /* If go, comp the pool and render it. */
         if(go) {
             comp_pool(&pool);
+            render_pool(display, &pool);
             gencount++;
             sprintf(wmtbuff, "Generation: %d", gencount);
             SDL_WM_SetCaption(wmtbuff, NULL);
         }
 
-        /* SDL event capture. */
+        /* USER IO capture.. */
         while(SDL_PollEvent(&event)) {
             switch(event.type) {
                 case SDL_QUIT:
