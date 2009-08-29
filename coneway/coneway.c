@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <SDL/SDL.h>
 
-#define X 100
-#define Y 100
+#define X 90
+#define Y 90
 
 #define BSIZE 10 /* Squared. */
 
@@ -31,10 +31,11 @@ void oshit(struct pool *pool, char *msg) {
 }
 
 int render_pool(SDL_Surface *canvas, struct pool *pool) {
-    int x, y, color;
+    int x, y, fgcolor, bgcolor;
     SDL_Rect dest;
 
-    color = SDL_MapRGB(canvas->format, 0, 255, 0);
+    fgcolor = SDL_MapRGB(canvas->format, 0, 0, 0);
+    bgcolor = SDL_MapRGB(canvas->format, 255, 255, 255);
     dest.w = BSIZE;
     dest.h = BSIZE;
 
@@ -43,10 +44,10 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
             dest.x = x * BSIZE;
             dest.y = y * BSIZE;
             if(pool->data[x][y] != 0) {
-                SDL_FillRect(canvas, &dest, color);
+                SDL_FillRect(canvas, &dest, fgcolor);
             }
             else
-                SDL_FillRect(canvas, &dest, 0);
+                SDL_FillRect(canvas, &dest, bgcolor);
         }
     }
     SDL_Flip(canvas);
@@ -132,14 +133,14 @@ int comp_pool(struct pool *pool) {
 
 int main(int argc, char **argv) {
     struct pool pool;
+    int gencount, go, simspeed;
     SDL_Surface *display;
     SDL_Event event;
-    int gencount, go, simspeed;
+    char wmtbuff[100];
 
     memset(&pool, 0, sizeof(pool));
     gencount = go = 0;
     simspeed = 1000;
-
 
     /* Toad oscilator. Ocelates for infinity*/
     pool.data[9][7] = 1;
@@ -172,8 +173,6 @@ int main(int argc, char **argv) {
     pool.data[56][31] = 1;
     pool.data[57][31] = 1;
 
-
-
     /* Init SDL, display and TTF for font drawing. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.");
@@ -182,13 +181,15 @@ int main(int argc, char **argv) {
         oshit(&pool, "SDL Screen mode set");
 
     SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
+
     while(1) {
         render_pool(display, &pool);
 
         if(go) {
             comp_pool(&pool);
             gencount++;
-            printf("gen: %d\n", gencount);
+            sprintf(wmtbuff, "Generation: %d", gencount);
+            SDL_WM_SetCaption(wmtbuff, NULL);
         }
 
         /* SDL event capture. */
