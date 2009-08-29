@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <SDL/SDL.h>
 
-#define X 20
-#define Y 20
+#define X 50
+#define Y 50
 
-#define BSIZE 20 /* Squared. */
+#define BSIZE 10 /* Squared. */
+
+#define DEBUG
 
 struct pool {
     char data[Y][X];
@@ -15,6 +17,7 @@ void oshit(struct pool *pool, char *msg) {
     int x, y;
     printf("OH SHIT: %s\n", msg);
 
+#ifdef DEBUG
     /* dump cell array. */
     printf("cell dump\n");
     for(y = 0; y < Y; y++) {
@@ -23,6 +26,7 @@ void oshit(struct pool *pool, char *msg) {
         }
         puts("\n");
     }
+#endif
     exit(1);
 }
 
@@ -93,7 +97,9 @@ int comp_pool(struct pool *pool) {
             neighb = neighbour_count(x, y, &snapshot);
             cdata = &pool->data[y][x];
 
-            //printf("hits from %dx%d h:%d\n", x, y, neighb);
+#ifdef DEBUG
+            printf("hits from %dx%d h:%d\n", x, y, neighb);
+#endif
             switch(neighb) {
                 /* Rule 1: Any live cell with fewer than two live neighbours 
                    dies, as if caused by underpopulation. */
@@ -121,7 +127,6 @@ int comp_pool(struct pool *pool) {
             }
         }
     }
-    //printf("---\n");
     return 0;
 }
 
@@ -129,9 +134,12 @@ int main(int argc, char **argv) {
     struct pool pool;
     SDL_Surface *display;
     SDL_Event event;
+    unsigned long gencount;
 
     memset(&pool, 0, sizeof(pool));
+    gencount = 0;
 
+    /* Toad oscilator. Ocelates for infinity*/
     pool.data[7][9] = 1;
     pool.data[7][8] = 1;
     pool.data[7][7] = 1;
@@ -139,15 +147,30 @@ int main(int argc, char **argv) {
     pool.data[8][7] = 1;
     pool.data[8][6] = 1;
 
+    /* Blinker. Same as aboveish*/
+    pool.data[12][12] = 1;
+    pool.data[12][13] = 1;
+    pool.data[12][14] = 1;
+
+    /* The infamous F-pentomino, dies after 130 gens appar */
+    pool.data[32][24] = 1;
+    pool.data[32][23] = 1;
+    pool.data[33][23] = 1;
+    pool.data[33][22] = 1;
+    pool.data[34][23] = 1;
+
+    /* Init SDL, display and TTF for font drawing. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.");
 
     if(!(display = SDL_SetVideoMode(BSIZE*X, BSIZE*Y, 16, SDL_SWSURFACE)))
         oshit(&pool, "SDL Screen mode set");
 
+    SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
     while(1) {
         comp_pool(&pool);
         render_pool(display, &pool);
+        gencount++;
 
         /* SDL event capture. */
         while(SDL_PollEvent(&event)) {
