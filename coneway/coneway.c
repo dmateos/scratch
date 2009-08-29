@@ -5,7 +5,7 @@
 #define X 20
 #define Y 20
 
-#define BSIZE 10 /* Squared. */
+#define BSIZE 20 /* Squared. */
 
 struct pool {
     char data[Y][X];
@@ -36,11 +36,13 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
 
     for(y = 0; y < Y; y++) {
         for(x = 0; x < X; x++) {
+            dest.x = x * BSIZE;
+            dest.y = y * BSIZE;
             if(pool->data[y][x] != 0) {
-                dest.x = x * BSIZE;
-                dest.y = y * BSIZE;
                 SDL_FillRect(canvas, &dest, color);
             }
+            else
+                SDL_FillRect(canvas, &dest, 0);
         }
     }
     SDL_Flip(canvas);
@@ -89,21 +91,32 @@ int comp_pool(struct pool *pool) {
     for(y = 0; y < Y; y++) {
         for(x = 0; x < X; x++) {
             neighb = neighbour_count(x, y, &snapshot);
+            cdata = &pool->data[y][x];
 
+            //printf("hits from %dx%d h:%d\n", x, y, neighb);
             switch(neighb) {
+                /* Rule 1: Any live cell with fewer than two live neighbours 
+                   dies, as if caused by underpopulation. */
                 case 0:
-                    break;
                 case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                    //printf("hits from %dx%d h:%d\n", x, y, neighb);
+                    if(*cdata == 1)
+                        *cdata = 0;
                     break;
+                /* Rule 3: Any live cell with two or three live neighbours 
+                 * lives on to the next generation. */
+                case 2:
+                    break;
+                /* Rule 4: Any dead cell with exactly three live neighbours 
+                   becomes a live cell. */
+                case 3:
+                    if(*cdata == 0)
+                        *cdata = 1;
+                    break;
+                /* Rule 2: Any live cell with more than three live neighbours 
+                   dies, as if by overcrowding. */
                 default:
+                    if(*cdata == 1)
+                        *cdata = 0;
                     break;
             }
         }
@@ -118,10 +131,13 @@ int main(int argc, char **argv) {
     SDL_Event event;
 
     memset(&pool, 0, sizeof(pool));
-    pool.data[0][0] = 1;
-    pool.data[9][9] = 1;
+
     pool.data[7][9] = 1;
-    pool.data[19][19] = 1;
+    pool.data[7][8] = 1;
+    pool.data[7][7] = 1;
+    pool.data[8][8] = 1;
+    pool.data[8][7] = 1;
+    pool.data[8][6] = 1;
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.");
@@ -143,8 +159,8 @@ int main(int argc, char **argv) {
                     break;
             }
         }
+        SDL_Delay(1000);
     }
-
     SDL_Quit();
     return 0;
 }
