@@ -24,7 +24,8 @@
 
 /* Note: cooler way to do this when i have time:
    keep track of dirty for each element by turning
-   the 0/1 char switch into a bitfield. */
+   the 0/1 char switch into a bitfield.  So never fear
+   the black magic defines bellow are currently unused.  */
 #define CHECK_LIVE(p) (p & (1 << 0))
 #define SET_LIVE(p) (p |= (1 << 0))
 #define UNSET_LIVE(p) (p &= ~ (1 << 0))
@@ -198,7 +199,6 @@ int main(int argc, char **argv) {
         oshit(&pool, "SDL Screen mode set");
 
     /* Set title and render initial setup. */
-    SDL_WM_SetCaption("Coneway - Game of life player, by Daniel Mateos", NULL);
     draw_pool(&pool, display);
 
     while(mainloop) {
@@ -207,10 +207,9 @@ int main(int argc, char **argv) {
             comp_pool(&pool);
             pool.dirty = 1;
             pool.gencount++;
-            sprintf(wmtbuff, "Coneway - %dx%d - Gen: %d, Delay: %dms, Pause: %d", X, Y, pool.gencount, simspeed, go);
-            SDL_WM_SetCaption(wmtbuff, NULL);
-        }
+                    }
         /* If not going, check for user clicks for cell placement. */
+        /* USER IO capture.. */
         else {
             mousemask = SDL_GetMouseState(&mousex, &mousey);
             /* Add cell. */
@@ -218,13 +217,13 @@ int main(int argc, char **argv) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
                 pool.dirty = 1;
             }
-            if(mousemask & SDL_BUTTON(3)) {
+            else if(mousemask & SDL_BUTTON(3)) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
                 pool.dirty =1;
             }
         }
 
-        /* USER IO capture.. */
+        /* More user io capture. */
         while(SDL_PollEvent(&event)) {
             switch(event.type) {
                 case SDL_QUIT:
@@ -269,7 +268,11 @@ int main(int argc, char **argv) {
         /* If dirty, render the pool. */
         if(pool.dirty)
             draw_pool(&pool, display);
+        
+        sprintf(wmtbuff, "Coneway - %dx%d - Gen: %d, Delay: %dms, Running: %d", 
+                          X, Y, pool.gencount, simspeed, go);
 
+        SDL_WM_SetCaption(wmtbuff, NULL);
         SDL_Delay(simspeed);
     }
     SDL_Quit();
