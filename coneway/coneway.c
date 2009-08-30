@@ -15,6 +15,14 @@ struct pool {
     char dirty; /* To keep track of rendering updates. */
 };
 
+void oshit(struct pool *pool, char *msg);
+int render_pool(SDL_Surface *canvas, struct pool *pool);
+int neighbour_count(int cellx, int celly, struct pool *pool);
+int comp_pool(struct pool *pool);
+void dump_pool(struct pool *pool, char *filename);
+void read_pool(struct pool *pool, char *filename);
+int main(int argc, char **argv);
+
 void oshit(struct pool *pool, char *msg) {
     int x, y;
     printf("OH SHIT: %s\n", msg);
