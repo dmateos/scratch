@@ -1,16 +1,17 @@
-/** Coneway, Implementation of Conway's_Game_of_Life
-    Daniel Mateos, 2009
-
-    To see if i could make a decent game of life over a day and a half and
-    hope its better than PDA's that i havent seen yet.
-
-    L to load the sample/test config with cell specs from wikipedia.
-    S to dump current cell pool to disk.
-    C to clear cell pool.
-    O/P to -/+ sim speed by 100ms increments.
-    Mouse button click 1 on square to add new cells and 2 to remove.
-    Enter to start sim.
-*/
+/** 
+ * Coneway, Implementation of Conway's_Game_of_Life
+ * Daniel Mateos, 2009
+ * 
+ * To see if i could make a decent game of life over a day and a half and
+ * hope its better than PDA's version that i havent seen yet.
+ *
+ * L to load the sample/test config with cell specs from wikipedia.
+ * S to dump current cell pool to disk.
+ * C to clear cell pool.
+ * O/P to -/+ sim speed by 100ms increments.
+ * Mouse button click 1 on square to add new cells and 2 to remove.
+ * Enter to start sim.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -157,13 +158,15 @@ int comp_pool(struct pool *pool) {
 
 void dump_pool(struct pool *pool, char *filename) {
     FILE *file = fopen(filename, "w");
-    fwrite(pool, 1, sizeof(*pool), file);
+    if(fwrite(pool, 1, sizeof(*pool), file) < sizeof(*pool))
+        oshit(pool, "Short write on pool dump");
     fclose(file);
 }
 
 void read_pool(struct pool *pool, char *filename) {
     FILE *file = fopen(filename, "r");
-    fread(pool, 1, sizeof(*pool), file);
+    if(fread(pool, 1, sizeof(*pool), file) < sizeof(*pool))
+        oshit(pool, "Short write on pool read");
     fclose(file);
 }
 
