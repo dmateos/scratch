@@ -38,15 +38,15 @@ struct pool {
     int gencount;
 };
 
-void oshit(struct pool *pool, char *msg);
+void oshit(const struct pool *pool, char *msg);
 int draw_pool(struct pool *pool, SDL_Surface *canvas);
-int neighb_pool(struct pool *pool, int cellx, int celly);
+int neighb_pool(const struct pool *pool, int cellx, int celly);
 int comp_pool(struct pool *pool);
-void dump_pool(struct pool *pool, char *filename);
+void dump_pool(const struct pool *pool, char *filename);
 void read_pool(struct pool *pool, char *filename);
 int main(int argc, char **argv);
 
-void oshit(struct pool *pool, char *msg) {
+void oshit(const struct pool *pool, char *msg) {
     int x, y;
     printf("OH SHIT: %s\n", msg);
 
@@ -87,7 +87,7 @@ int draw_pool(struct pool *pool, SDL_Surface *canvas) {
     return 0;
 }
 
-int neighb_pool(struct pool *pool, int cellx, int celly) {
+int neighb_pool(const struct pool *pool, int cellx, int celly) {
     int ncount = 0;
 
     /* LEFT */
@@ -119,23 +119,23 @@ int neighb_pool(struct pool *pool, int cellx, int celly) {
 }
 
 int comp_pool(struct pool *pool) {
-    int x, y, neighb;
-    struct pool snapshot;
+    int x, y, neighbcount;
+    struct pool poolstate;
     char *cdata;
 
-    /* snapshot the pool to apply transformation from to sim all cells 
-       reacting at once. */
-    memcpy(&snapshot, pool, sizeof(snapshot));
+    /* snapshot the pool state to apply transformation from to sim all cells 
+       reacting at once instead of to the modified active cells. */
+    memcpy(&poolstate, pool, sizeof(poolstate));
 
     for(x = 0; x < X; x++) {
         for(y = 0; y < Y; y++) {
-            neighb = neighb_pool(&snapshot, x, y);
+            neighbcount = neighb_pool(&poolstate, x, y);
             cdata = &pool->data[x][y];
 
 #ifdef DEBUG
             printf("hits from %dx%d h:%d\n", x, y, neighb);
 #endif
-            switch(neighb) {
+            switch(neighbcount) {
                 /* Rule 1: Any live cell with fewer than two live neighbours 
                    dies, as if caused by underpopulation. */
                 case 0:
@@ -165,7 +165,7 @@ int comp_pool(struct pool *pool) {
     return 0;
 }
 
-void dump_pool(struct pool *pool, char *filename) {
+void dump_pool(const struct pool *pool, char *filename) {
     FILE *file = fopen(filename, "w");
     if(fwrite(pool, 1, sizeof(*pool), file) < sizeof(*pool))
         oshit(pool, "Short write on pool dump");
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
             comp_pool(&pool);
             pool.dirty = 1;
             pool.gencount++;
-                    }
+        }
         /* If not going, check for user clicks for cell placement. */
         /* USER IO capture.. */
         else {
