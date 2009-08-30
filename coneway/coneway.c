@@ -274,11 +274,15 @@ int main(int argc, char **argv) {
         if(pool.dirty)
             draw_pool(&pool, display);
         
-        sprintf(wmtbuff, "Coneway - %dx%d - Gen: %d, Delay: %dms, Running: %d", 
-                          X, Y, pool.gencount, simspeed, go);
+        /* Update title bar. */
+        snprintf(wmtbuff, sizeof(wmtbuff),
+                "Coneway - %dx%d - Gen: %d, Delay: %dms, Running: %d",
+                 X, Y, pool.gencount, simspeed, go);
 
         SDL_WM_SetCaption(wmtbuff, NULL);
-        SDL_Delay(simspeed);
+
+        /* If going we delay by user spec if not 10ms so editing isnt laggy. */
+        (go) ? SDL_Delay(simspeed) : SDL_Delay(10);
     }
     SDL_Quit();
     return 0;
