@@ -166,37 +166,6 @@ int main(int argc, char **argv) {
     mainloop = 1;
     simspeed = 500;
 
-    /* Toad oscilator. Ocelates for infinity*/
-    pool.data[9][7] = 1;
-    pool.data[8][7] = 1;
-    pool.data[7][7] = 1;
-    pool.data[8][8] = 1;
-    pool.data[7][8] = 1;
-    pool.data[6][8] = 1;
-
-    /* Blinker. Same as aboveish*/
-    pool.data[12][12] = 1;
-    pool.data[13][12] = 1;
-    pool.data[14][12] = 1;
-
-    /* Die hard, dies after 130 its. */
-    pool.data[50][70] = 1;
-    pool.data[51][70] = 1;
-    pool.data[51][71] = 1;
-    pool.data[56][69] = 1;
-    pool.data[55][71] = 1;
-    pool.data[56][71] = 1;
-    pool.data[57][71] = 1;
-    
-    /* Another die hard, syncronicity. */
-    pool.data[50][30] = 1;
-    pool.data[51][30] = 1;
-    pool.data[51][31] = 1;
-    pool.data[56][29] = 1;
-    pool.data[55][31] = 1;
-    pool.data[56][31] = 1;
-    pool.data[57][31] = 1;
-
     /* Init SDL, display and TTF for font drawing. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.");
