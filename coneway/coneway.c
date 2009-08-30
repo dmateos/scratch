@@ -20,18 +20,20 @@
 #define X 90
 #define Y 90
 #define BSIZE 10 /* Squared. */
+#define FGCOLOR 0, 0, 255
+#define BGCOLOR 255, 255, 255
 //#define DEBUG
 
 /* Note: cooler way to do this when i have time:
    keep track of dirty for each element by turning
    the 0/1 char switch into a bitfield.  So never fear
-   the black magic defines bellow are currently unused.  */
-#define CHECK_LIVE(p) (p & (1 << 0))
-#define SET_LIVE(p) (p |= (1 << 0))
-#define UNSET_LIVE(p) (p &= ~ (1 << 0))
-#define CHECK_DIRTY(p) (p & ( 1 << 2))
-#define SET_DIRTY(p) (p |= (1 << 2))
-#define UNSET_DIRTY(p) (p |= (1 << 2))
+   the black magic defines bellow are currently unused.
+#define CHECK_LIVE(p)   (p & (1 << 0))
+#define SET_LIVE(p)     (p |= (1 << 0))
+#define UNSET_LIVE(p)   (p &= ~(1 << 0))
+#define CHECK_DIRTY(p)  (p & ( 1 << 1))
+#define SET_DIRTY(p)    (p |= (1 << 1))
+#define UNSET_DIRTY(p)  (p &= ~(1 << 1)) */
 struct pool {
     char data[X][Y];
     char dirty; /* To keep track of rendering updates. */
@@ -70,8 +72,8 @@ int draw_pool(struct pool *pool, SDL_Surface *canvas) {
 
     /* Background and foreground colors for rendering and 
        WxH pixels of each cell on screen. */
-    fgc = SDL_MapRGB(canvas->format, 0, 0, 0);
-    bgc = SDL_MapRGB(canvas->format, 255, 255, 255);
+    fgc = SDL_MapRGB(canvas->format, FGCOLOR);
+    bgc = SDL_MapRGB(canvas->format, BGCOLOR);
     dest.w = BSIZE;
     dest.h = BSIZE;
 
@@ -184,7 +186,7 @@ int main(int argc, char **argv) {
     int go, simspeed, mainloop, mousex, mousey;
     SDL_Surface *display;
     SDL_Event event;
-    char wmtbuff[100], mousemask;
+    char wmtbuff[150], mousemask;
 
     memset(&pool, 0, sizeof(pool));
     go = 0;
@@ -243,7 +245,10 @@ int main(int argc, char **argv) {
                             (simspeed+100 <= 10000) ? (simspeed += 100) : 0;
                             break;
                         case SDLK_o:
-                            (simspeed-100 >= 0) ? (simspeed -= 100) : 0;
+                            /* Had min speed as 0, runs fast but fucks up X 
+                               with title updates, NOTE: set back when font
+                               engine written. */
+                            (simspeed-100 >= 100) ? (simspeed -= 100) : 0;
                             break;
                         case SDLK_c:
                             memset(&pool, 0, sizeof(pool));
