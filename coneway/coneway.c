@@ -1,6 +1,6 @@
 /** 
  * Coneway, Implementation of Conway's_Game_of_Life
- * Daniel Mateos, 2009
+ * Daniel Mateos, Sep 2009
  * 
  * To see if i could make a decent game of life over a day and a half and
  * hope its better than PDA's version that i havent seen yet.
@@ -22,14 +22,24 @@
 #define BSIZE 10 /* Squared. */
 //#define DEBUG
 
+/* Note: cooler way to do this when i have time:
+   keep track of dirty for each element by turning
+   the 0/1 char switch into a bitfield. */
+#define CHECK_LIVE(p) (p & (1 << 0))
+#define SET_LIVE(p) (p |= (1 << 0))
+#define UNSET_LIVE(p) (p &= ~ (1 << 0))
+#define CHECK_DIRTY(p) (p & ( 1 << 2))
+#define SET_DIRTY(p) (p |= (1 << 2))
+#define UNSET_DIRTY(p) (p |= (1 << 2))
 struct pool {
     char data[X][Y];
     char dirty; /* To keep track of rendering updates. */
+    int gencount;
 };
 
 void oshit(struct pool *pool, char *msg);
-int render_pool(struct pool *pool, SDL_Surface *canvas);
-int neighbour_count(struct pool *pool, int cellx, int celly);
+int draw_pool(struct pool *pool, SDL_Surface *canvas);
+int neighb_pool(struct pool *pool, int cellx, int celly);
 int comp_pool(struct pool *pool);
 void dump_pool(struct pool *pool, char *filename);
 void read_pool(struct pool *pool, char *filename);
@@ -53,7 +63,7 @@ void oshit(struct pool *pool, char *msg) {
     exit(1);
 }
 
-int render_pool(struct pool *pool, SDL_Surface *canvas) {
+int draw_pool(struct pool *pool, SDL_Surface *canvas) {
     int x, y, fgc, bgc;
     SDL_Rect dest;
 
@@ -76,7 +86,7 @@ int render_pool(struct pool *pool, SDL_Surface *canvas) {
     return 0;
 }
 
-int neighbour_count(struct pool *pool, int cellx, int celly) {
+int neighb_pool(struct pool *pool, int cellx, int celly) {
     int ncount = 0;
 
     /* LEFT */
@@ -118,7 +128,7 @@ int comp_pool(struct pool *pool) {
 
     for(x = 0; x < X; x++) {
         for(y = 0; y < Y; y++) {
-            neighb = neighbour_count(&snapshot, x, y);
+            neighb = neighb_pool(&snapshot, x, y);
             cdata = &pool->data[x][y];
 
 #ifdef DEBUG
@@ -170,13 +180,13 @@ void read_pool(struct pool *pool, char *filename) {
 
 int main(int argc, char **argv) {
     struct pool pool;
-    int gencount, go, simspeed, mainloop, mousex, mousey;
+    int go, simspeed, mainloop, mousex, mousey;
     SDL_Surface *display;
     SDL_Event event;
     char wmtbuff[100], mousemask;
 
     memset(&pool, 0, sizeof(pool));
-    gencount = go = 0;
+    go = 0;
     mainloop = 1;
     simspeed = 500;
 
@@ -188,16 +198,16 @@ int main(int argc, char **argv) {
         oshit(&pool, "SDL Screen mode set");
 
     /* Set title and render initial setup. */
-    SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
-    render_pool(&pool, display);
+    SDL_WM_SetCaption("Coneway - Game of life player, by Daniel Mateos", NULL);
+    draw_pool(&pool, display);
 
     while(mainloop) {
         /* If go, comp the pool and render it. */
         if(go) {
             comp_pool(&pool);
             pool.dirty = 1;
-            gencount++;
-            sprintf(wmtbuff, "Generation: %d. Delay: %dms", gencount, simspeed);
+            pool.gencount++;
+            sprintf(wmtbuff, "Coneway - %dx%d - Gen: %d, Delay: %dms, Pause: %d", X, Y, pool.gencount, simspeed, go);
             SDL_WM_SetCaption(wmtbuff, NULL);
         }
         /* If not going, check for user clicks for cell placement. */
@@ -239,6 +249,7 @@ int main(int argc, char **argv) {
                         case SDLK_c:
                             memset(&pool, 0, sizeof(pool));
                             pool.dirty = 1;
+                            pool.gencount = 0;
                             break;
                         case SDLK_s:
                             dump_pool(&pool, "pool.cone");
@@ -247,6 +258,7 @@ int main(int argc, char **argv) {
                         case SDLK_l:
                             read_pool(&pool, "pool.cone");
                             pool.dirty = 1;
+                            pool.gencount = 0;
                             break;
                         default:
                             break;
@@ -256,7 +268,7 @@ int main(int argc, char **argv) {
         }
         /* If dirty, render the pool. */
         if(pool.dirty)
-            render_pool(&pool, display);
+            draw_pool(&pool, display);
 
         SDL_Delay(simspeed);
     }
