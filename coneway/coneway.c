@@ -19,9 +19,7 @@
 
 #define X 90
 #define Y 90
-
 #define BSIZE 10 /* Squared. */
-
 //#define DEBUG
 
 struct pool {
@@ -30,8 +28,8 @@ struct pool {
 };
 
 void oshit(struct pool *pool, char *msg);
-int render_pool(SDL_Surface *canvas, struct pool *pool);
-int neighbour_count(int cellx, int celly, struct pool *pool);
+int render_pool(struct pool *pool, SDL_Surface *canvas);
+int neighbour_count(struct pool *pool, int cellx, int celly);
 int comp_pool(struct pool *pool);
 void dump_pool(struct pool *pool, char *filename);
 void read_pool(struct pool *pool, char *filename);
@@ -55,7 +53,7 @@ void oshit(struct pool *pool, char *msg) {
     exit(1);
 }
 
-int render_pool(SDL_Surface *canvas, struct pool *pool) {
+int render_pool(struct pool *pool, SDL_Surface *canvas) {
     int x, y, fgc, bgc;
     SDL_Rect dest;
 
@@ -78,7 +76,7 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
     return 0;
 }
 
-int neighbour_count(int cellx, int celly, struct pool *pool) {
+int neighbour_count(struct pool *pool, int cellx, int celly) {
     int ncount = 0;
 
     /* LEFT */
@@ -120,7 +118,7 @@ int comp_pool(struct pool *pool) {
 
     for(x = 0; x < X; x++) {
         for(y = 0; y < Y; y++) {
-            neighb = neighbour_count(x, y, &snapshot);
+            neighb = neighbour_count(&snapshot, x, y);
             cdata = &pool->data[x][y];
 
 #ifdef DEBUG
@@ -191,7 +189,7 @@ int main(int argc, char **argv) {
 
     /* Set title and render initial setup. */
     SDL_WM_SetCaption("CONEways Game of life player, Daniel Mateos", NULL);
-    render_pool(display, &pool);
+    render_pool(&pool, display);
 
     while(mainloop) {
         /* If go, comp the pool and render it. */
@@ -258,7 +256,7 @@ int main(int argc, char **argv) {
         }
         /* If dirty, render the pool. */
         if(pool.dirty)
-            render_pool(display, &pool);
+            render_pool(&pool, display);
 
         SDL_Delay(simspeed);
     }
