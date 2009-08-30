@@ -12,6 +12,7 @@
 
 struct pool {
     char data[X][Y];
+    char dirty; /* To keep track of rendering updates. */
 };
 
 void oshit(struct pool *pool, char *msg) {
@@ -51,6 +52,7 @@ int render_pool(SDL_Surface *canvas, struct pool *pool) {
         }
     }
     SDL_Flip(canvas);
+    pool->dirty = 0;
     return 0;
 }
 
@@ -132,6 +134,18 @@ int comp_pool(struct pool *pool) {
     return 0;
 }
 
+void dump_pool(struct pool *pool, char *filename) {
+    FILE *file = fopen(filename, "w");
+    fwrite(pool, 1, sizeof(*pool), file);
+    fclose(file);
+}
+
+void read_pool(struct pool *pool, char *filename) {
+    FILE *file = fopen(filename, "r");
+    fread(pool, 1, sizeof(*pool), file);
+    fclose(file);
+}
+
 int main(int argc, char **argv) {
     struct pool pool;
     int gencount, go, simspeed, mainloop, mousex, mousey;
@@ -190,7 +204,7 @@ int main(int argc, char **argv) {
         /* If go, comp the pool and render it. */
         if(go) {
             comp_pool(&pool);
-            render_pool(display, &pool);
+            pool.dirty = 1;
             gencount++;
             sprintf(wmtbuff, "Generation: %d. Delay: %dms", gencount, simspeed);
             SDL_WM_SetCaption(wmtbuff, NULL);
@@ -201,11 +215,11 @@ int main(int argc, char **argv) {
             /* Add cell. */
             if(mousemask & SDL_BUTTON(1)) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
-                render_pool(display, &pool);
+                pool.dirty = 1;
             }
             if(mousemask & SDL_BUTTON(3)) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
-                render_pool(display, &pool);
+                pool.dirty =1;
             }
         }
 
@@ -231,17 +245,30 @@ int main(int argc, char **argv) {
                         case SDLK_o:
                             (simspeed-100 >= 0) ? (simspeed -= 100) : 0;
                             break;
+                        case SDLK_c:
+                            memset(&pool, 0, sizeof(pool));
+                            pool.dirty = 1;
+                            break;
+                        case SDLK_s:
+                            dump_pool(&pool, "pool.cone");
+                            pool.dirty = 1;
+                            break;
+                        case SDLK_l:
+                            read_pool(&pool, "pool.cone");
+                            pool.dirty = 1;
+                            break;
                         default:
                             break;
                     }
                 break;
             }
         }
-        
+        /* If dirty, render the pool. */
+        if(pool.dirty)
+            render_pool(display, &pool);
 
         SDL_Delay(simspeed);
     }
-
     SDL_Quit();
     return 0;
 }
