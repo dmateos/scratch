@@ -14,7 +14,6 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <SDL/SDL.h>
 
 #define X 90
@@ -103,7 +102,7 @@ int neighb_pool(const struct pool *pool, int cellx, int celly) {
     if((celly-1 >= 0) && pool->data[cellx][celly-1])
         ncount++;
     /* DOWN */
-    if(celly+1 < Y && pool->data[cellx][celly+1])
+    if((celly+1 < Y) && pool->data[cellx][celly+1])
         ncount++;
     /* UP LEFT */
     if((cellx-1 >= 0) && (celly-1 >= 0) && pool->data[cellx-1][celly-1])
@@ -230,7 +229,7 @@ int main(int argc, char **argv) {
             /* BELETED! */
             else if(mousemask & SDL_BUTTON(3)) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
-                pool.dirty =1;
+                pool.dirty = 1;
             }
         }
 
@@ -285,8 +284,8 @@ int main(int argc, char **argv) {
         
         /* Update title bar. */
         snprintf(wmtbuff, sizeof(wmtbuff),
-                "Coneway - %dx%d - Gen: %d, Delay: %dms, Running: %d",
-                 X, Y, pool.gencount, simspeed, go);
+                "Coneway - %dx%d - Gen: %d, Delay: %dms, Running: %s",
+                 X, Y, pool.gencount, simspeed, go ? "True" : "False");
         SDL_WM_SetCaption(wmtbuff, NULL);
 
         /* If going we delay by user spec if not 10ms so editing isnt laggy. */
