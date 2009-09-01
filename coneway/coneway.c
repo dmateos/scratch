@@ -40,15 +40,15 @@ struct pool {
     int gencount;
 };
 
-void oshit(const struct pool *pool, char *msg);
+void oshit(const struct pool *pool, char *msg, int fatal);
 int draw_pool(struct pool *pool, SDL_Surface *canvas);
 int neighb_pool(const struct pool *pool, int cellx, int celly);
 int comp_pool(struct pool *pool);
-void dump_pool(const struct pool *pool, char *filename);
-void read_pool(struct pool *pool, char *filename);
+void save_pool(const struct pool *pool, char *filename);
+void open_pool(struct pool *pool, char *filename);
 int main(int argc, char **argv);
 
-void oshit(const struct pool *pool, char *msg) {
+void oshit(const struct pool *pool, char *msg, int fatal) {
     int x, y;
     printf("OH SHIT: %s\n", msg);
 
@@ -63,7 +63,8 @@ void oshit(const struct pool *pool, char *msg) {
         puts("\n");
     }
 #endif
-    exit(1);
+    if(fatal)
+        exit(1);
 }
 
 int draw_pool(struct pool *pool, SDL_Surface *canvas) {
@@ -167,38 +168,45 @@ int comp_pool(struct pool *pool) {
     return 0;
 }
 
-void dump_pool(const struct pool *pool, char *filename) {
+void save_pool(const struct pool *pool, char *filename) {
     FILE *file = fopen(filename, "w");
-    if(fwrite(pool, 1, sizeof(*pool), file) < sizeof(*pool))
-        oshit(pool, "Short write on pool dump");
-    fclose(file);
+    if(file != NULL) {
+        if(fwrite(pool, 1, sizeof(*pool), file) < sizeof(*pool))
+            oshit(pool, "Short write on pool dump, not likley", 0);
+        fclose(file);
+    }
 }
 
-void read_pool(struct pool *pool, char *filename) {
+void open_pool(struct pool *pool, char *filename) {
     FILE *file = fopen(filename, "r");
-    if(fread(pool, 1, sizeof(*pool), file) < sizeof(*pool))
-        oshit(pool, "Short write on pool read");
-    fclose(file);
+    if(file != NULL) {
+        if(fread(pool, 1, sizeof(*pool), file) < sizeof(*pool)) {
+            oshit(pool, "Short read on load, maybe pool size/ver diff", 0);
+            /* Recover by just giving zeroed data or garbage could be shown. */
+            memset(pool, 0, sizeof(*pool));
+        }
+        fclose(file);
+    }
 }
 
 int main(int argc, char **argv) {
-    struct pool pool;
     int go, simspeed, mainloop, mousex, mousey;
+    struct pool pool;
+    char wmtbuff[150], mousemask;
     SDL_Surface *display;
     SDL_Event event;
-    char wmtbuff[150], mousemask;
 
-    memset(&pool, 0, sizeof(pool));
     go = 0;
     mainloop = 1;
     simspeed = 500;
+    memset(&pool, 0, sizeof(pool));
 
     /* Init SDL, display and TTF for font drawing. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
-        oshit(&pool, "SDL video init.");
+        oshit(&pool, "SDL video init.", 1);
 
     if(!(display = SDL_SetVideoMode(BSIZE*X, BSIZE*Y, 16, SDL_SWSURFACE)))
-        oshit(&pool, "SDL Screen mode set");
+        oshit(&pool, "SDL Screen mode set", 1);
 
     /* Set title and render initial setup. */
     draw_pool(&pool, display);
@@ -219,6 +227,7 @@ int main(int argc, char **argv) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
                 pool.dirty = 1;
             }
+            /* BELETED! */
             else if(mousemask & SDL_BUTTON(3)) {
                 pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
                 pool.dirty =1;
@@ -242,13 +251,13 @@ int main(int argc, char **argv) {
                             break;
                         /* Sim speed  */
                         case SDLK_p:
-                            (simspeed+100 <= 10000) ? (simspeed += 100) : 0;
+                            (simspeed+50 <= 2000) ? (simspeed += 50) : 0;
                             break;
                         case SDLK_o:
                             /* Had min speed as 0, runs fast but fucks up X 
                                with title updates, NOTE: set back when font
                                engine written. */
-                            (simspeed-100 >= 100) ? (simspeed -= 100) : 0;
+                            (simspeed-50 >= 50) ? (simspeed -= 50) : 0;
                             break;
                         case SDLK_c:
                             memset(&pool, 0, sizeof(pool));
@@ -256,11 +265,11 @@ int main(int argc, char **argv) {
                             pool.gencount = 0;
                             break;
                         case SDLK_s:
-                            dump_pool(&pool, "pool.cone");
+                            save_pool(&pool, "pool.cone");
                             pool.dirty = 1;
                             break;
                         case SDLK_l:
-                            read_pool(&pool, "pool.cone");
+                            open_pool(&pool, "pool.cone");
                             pool.dirty = 1;
                             pool.gencount = 0;
                             break;
@@ -278,7 +287,6 @@ int main(int argc, char **argv) {
         snprintf(wmtbuff, sizeof(wmtbuff),
                 "Coneway - %dx%d - Gen: %d, Delay: %dms, Running: %d",
                  X, Y, pool.gencount, simspeed, go);
-
         SDL_WM_SetCaption(wmtbuff, NULL);
 
         /* If going we delay by user spec if not 10ms so editing isnt laggy. */
