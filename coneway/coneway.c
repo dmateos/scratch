@@ -61,21 +61,23 @@ void oshit(const struct pool *pool, char *msg, int fatal) {
 int draw_pool(struct pool *pool, SDL_Surface *canvas) {
     int x, y, xmod, ymod;
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+
     for(x = 0; x < X; x++) {
         for(y = 0; y < Y; y++) {
             xmod = x * BSIZE;
             ymod = y * BSIZE;
 
-            /* Draw as active color if alive, else bg color. */   
-            pool->data[x][y] ? glColor3f(0, 0, 1.0) : 
-                               glColor3f(1.0, 1.0, 1.0); 
-    
-            glBegin(GL_QUADS);
-                glVertex2f(xmod, ymod);
-                glVertex2f(xmod+BSIZE, ymod);
-                glVertex2f(xmod+BSIZE, ymod+BSIZE);
-                glVertex2f(xmod, ymod+BSIZE);
-            glEnd();
+            glColor3f(FGCOLOR);
+            if(pool->data[x][y]) { 
+                glBegin(GL_QUADS);
+                    glVertex2f(xmod, ymod);
+                    glVertex2f(xmod+BSIZE, ymod);
+                    glVertex2f(xmod+BSIZE, ymod+BSIZE);
+                    glVertex2f(xmod, ymod+BSIZE);
+                glEnd();
+            }
         }
     }
     SDL_GL_SwapBuffers();
@@ -205,10 +207,11 @@ int main(int argc, char **argv) {
 
     /* opengl 2d init stuff. */
     glEnable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glViewport(0, 0, X*BSIZE, Y*BSIZE);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, X*BSIZE, Y*BSIZE, 0.0, 0.0, 1.0);
-    glDisable(GL_DEPTH_TEST);
+    glOrtho(0.0, X*BSIZE, Y*BSIZE, 0.0, -1.0, 1.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
