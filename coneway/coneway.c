@@ -15,24 +15,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_opengl.h>
 
 #define X 90
 #define Y 90
 #define BSIZE 10 /* Squared. */
-#define FGCOLOR 0, 0, 255
-#define BGCOLOR 255, 255, 255
+/* FG/BG color, rgb floats for openGL, 1.0 = max. */
+#define FGCOLOR 0, 0, 1.0
+#define BGCOLOR 1.0, 1.0, 1.0
 //#define DEBUG
 
-/* Note: cooler way to do this when i have time:
-   keep track of dirty for each element by turning
-   the 0/1 char switch into a bitfield.  So never fear
-   the black magic defines bellow are currently unused.
-#define CHECK_LIVE(p)   (p & (1 << 0))
-#define SET_LIVE(p)     (p |= (1 << 0))
-#define UNSET_LIVE(p)   (p &= ~(1 << 0))
-#define CHECK_DIRTY(p)  (p & ( 1 << 1))
-#define SET_DIRTY(p)    (p |= (1 << 1))
-#define UNSET_DIRTY(p)  (p &= ~(1 << 1)) */
 struct pool {
     char data[X][Y];
     char dirty; /* To keep track of rendering updates. */
@@ -67,24 +59,26 @@ void oshit(const struct pool *pool, char *msg, int fatal) {
 }
 
 int draw_pool(struct pool *pool, SDL_Surface *canvas) {
-    int x, y, fgc, bgc;
-    SDL_Rect dest;
-
-    /* Background and foreground colors for rendering and 
-       WxH pixels of each cell on screen. */
-    fgc = SDL_MapRGB(canvas->format, FGCOLOR);
-    bgc = SDL_MapRGB(canvas->format, BGCOLOR);
-    dest.w = BSIZE;
-    dest.h = BSIZE;
+    int x, y, xmod, ymod;
 
     for(x = 0; x < X; x++) {
         for(y = 0; y < Y; y++) {
-            dest.x = x * BSIZE;
-            dest.y = y * BSIZE;
-            SDL_FillRect(canvas, &dest, (pool->data[x][y] == 1) ? fgc : bgc);
+            xmod = x * BSIZE;
+            ymod = y * BSIZE;
+
+            /* Draw as active color if alive, else bg color. */   
+            pool->data[x][y] ? glColor3f(0, 0, 1.0) : 
+                               glColor3f(1.0, 1.0, 1.0); 
+    
+            glBegin(GL_QUADS);
+                glVertex2f(xmod, ymod);
+                glVertex2f(xmod+BSIZE, ymod);
+                glVertex2f(xmod+BSIZE, ymod+BSIZE);
+                glVertex2f(xmod, ymod+BSIZE);
+            glEnd();
         }
     }
-    SDL_Flip(canvas);
+    SDL_GL_SwapBuffers();
     pool->dirty = 0;
     return 0;
 }
@@ -200,12 +194,26 @@ int main(int argc, char **argv) {
     simspeed = 500;
     memset(&pool, 0, sizeof(pool));
 
-    /* Init SDL, display and TTF for font drawing. */
+    /* Init SDL, display and openGL. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         oshit(&pool, "SDL video init.", 1);
 
-    if(!(display = SDL_SetVideoMode(BSIZE*X, BSIZE*Y, 16, SDL_SWSURFACE)))
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    
+    if(!(display = SDL_SetVideoMode(X*BSIZE, Y*BSIZE, 16, SDL_OPENGL)))
         oshit(&pool, "SDL Screen mode set", 1);
+
+    /* opengl 2d init stuff. */
+    glEnable(GL_TEXTURE_2D);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, X*BSIZE, Y*BSIZE, 0.0, 0.0, 1.0);
+    glDisable(GL_DEPTH_TEST);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glClearColor(1.0, 1.0, 1.0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     /* Set title and render initial setup. */
     draw_pool(&pool, display);
@@ -217,27 +225,20 @@ int main(int argc, char **argv) {
             pool.dirty = 1;
             pool.gencount++;
         }
-        /* If not going, check for user clicks for cell placement. */
-        /* USER IO capture.. */
-        else {
-            mousemask = SDL_GetMouseState(&mousex, &mousey);
-            /* Add cell. */
-            if(mousemask & SDL_BUTTON(1)) {
-                pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
-                pool.dirty = 1;
-            }
-            /* BELETED! */
-            else if(mousemask & SDL_BUTTON(3)) {
-                pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
-                pool.dirty = 1;
-            }
-        }
 
-        /* More user io capture. */
+        /* user io capture. */
         while(SDL_PollEvent(&event)) {
             switch(event.type) {
                 case SDL_QUIT:
                     mainloop = 0;
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    mousemask = SDL_GetMouseState(&mousex, &mousey);
+                    if(mousemask & SDL_BUTTON(1))
+                        pool.data[mousex/BSIZE][mousey/BSIZE] = 1;
+                    else if(mousemask & SDL_BUTTON(3))
+                        pool.data[mousex/BSIZE][mousey/BSIZE] = 0;
+                    pool.dirty = 1;
                     break;
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym) {
