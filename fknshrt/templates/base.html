@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <title>FKNSHRT</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css" />
+</head>
+<body>
+
+    <div id="box">
+        <div id="header">
+            <img src="/static/fknshrt-logo.png" alt="fknshrt logo"/>
+        </div>
+
+        <div id="urlbar">
+            <form action="/push_url_post" method="post">
+                <p>{{ form.url }}</p>
+                <input type="submit" value="Fknshrt it" />
+            </form>
+        </div>
+
+        {% block content %}
+
+        {% endblock %}
+
+        <div id="recentlinks">
+            <p> Recent: </p>
+            {% for url in hashed_urls %}
+                <p> <a href="/{{ url.hash }}">{{ url.hash }} {{ url.url }}</a></p>
+            {% endfor %}
+        </div>
+
+        <div id="recentlinks">
+            <p> Popular: </p>
+            {% for url in popular_urls %}
+                <p> <a href="/{{ url.hash }}">{{ url.hash }} {{url.url }} {{ url.hits }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

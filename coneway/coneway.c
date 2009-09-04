@@ -14,12 +14,13 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
-#define X 90
-#define Y 90
-#define BSIZE 10 /* Squared. */
+#define X 640
+#define Y 480
+#define BSIZE 2 /* Squared. */
 /* FG/BG color, rgb floats for openGL, 1.0 = max. */
 #define FGCOLOR 0, 0, 1.0
 #define BGCOLOR 1.0, 1.0, 1.0
@@ -35,6 +36,7 @@ void oshit(const struct pool *pool, char *msg, int fatal);
 int draw_pool(struct pool *pool, SDL_Surface *canvas);
 int neighb_pool(const struct pool *pool, int cellx, int celly);
 int comp_pool(struct pool *pool);
+int rand_pool(struct pool *pool);
 void save_pool(const struct pool *pool, char *filename);
 void open_pool(struct pool *pool, char *filename);
 int main(int argc, char **argv);
@@ -167,6 +169,20 @@ int comp_pool(struct pool *pool) {
     return 0;
 }
 
+int rand_pool(struct pool *pool) {
+    int x, y;
+
+    srand(time(NULL));
+
+    for(x = 0; x < X; x++)
+        for(y = 0; y < Y; y++)
+            pool->data[x][y] = (rand() % 10 == 1);
+
+    pool->gencount = 1;
+    pool->dirty = 1;
+    return 0;
+}
+
 void save_pool(const struct pool *pool, char *filename) {
     FILE *file = fopen(filename, "w");
     if(file != NULL) {
@@ -198,7 +214,7 @@ int main(int argc, char **argv) {
 
     go = 0;
     mainloop = 1;
-    simspeed = 500;
+    simspeed = 50;
     memset(&pool, 0, sizeof(pool));
     pool.dirty =1;
 
@@ -258,13 +274,13 @@ int main(int argc, char **argv) {
                             break;
                         /* Sim speed  */
                         case SDLK_p:
-                            (simspeed+50 <= 2000) ? (simspeed += 50) : 0;
+                            (simspeed+10 <= 2000) ? (simspeed += 10) : 0;
                             break;
                         case SDLK_o:
                             /* Had min speed as 0, runs fast but fucks up X 
                                with title updates, NOTE: set back when font
                                engine written. */
-                            (simspeed-50 >= 50) ? (simspeed -= 50) : 0;
+                            (simspeed-10 >= 10) ? (simspeed -= 10) : 0;
                             break;
                         case SDLK_c:
                             memset(&pool, 0, sizeof(pool));
@@ -278,6 +294,8 @@ int main(int argc, char **argv) {
                             open_pool(&pool, "pool.cone");
                             pool.gencount = 0;
                             break;
+                        case SDLK_r:
+                            rand_pool(&pool);
                         default:
                             break;
                     }
