@@ -61,25 +61,29 @@ void oshit(const struct pool *pool, char *msg, int fatal) {
 int draw_pool(struct pool *pool, SDL_Surface *canvas) {
     int x, y, xmod, ymod;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    /* Clear the screen and set the draw color. */
+    glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
+    glColor3f(FGCOLOR);
 
+    /* Render all the alive cells as quads. */
+    glBegin(GL_QUADS);
     for(x = 0; x < X; x++) {
         for(y = 0; y < Y; y++) {
             xmod = x * BSIZE;
             ymod = y * BSIZE;
 
-            glColor3f(FGCOLOR);
             if(pool->data[x][y]) { 
-                glBegin(GL_QUADS);
-                    glVertex2f(xmod, ymod);
-                    glVertex2f(xmod+BSIZE, ymod);
-                    glVertex2f(xmod+BSIZE, ymod+BSIZE);
-                    glVertex2f(xmod, ymod+BSIZE);
-                glEnd();
+                glVertex2f(xmod, ymod);
+                glVertex2f(xmod+BSIZE, ymod);
+                glVertex2f(xmod+BSIZE, ymod+BSIZE);
+                glVertex2f(xmod, ymod+BSIZE);
             }
         }
     }
+    glEnd();
+
+    /* Swap buffer and mark pool as clean. */
     SDL_GL_SwapBuffers();
     pool->dirty = 0;
     return 0;
@@ -181,6 +185,7 @@ void open_pool(struct pool *pool, char *filename) {
             memset(pool, 0, sizeof(*pool));
         }
         fclose(file);
+        pool->dirty = 1;
     }
 }
 
@@ -195,6 +200,7 @@ int main(int argc, char **argv) {
     mainloop = 1;
     simspeed = 500;
     memset(&pool, 0, sizeof(pool));
+    pool.dirty =1;
 
     /* Init SDL, display and openGL. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -211,15 +217,13 @@ int main(int argc, char **argv) {
     glViewport(0, 0, X*BSIZE, Y*BSIZE);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    /* Sets up a 'ortho' projection, ie no perspective. */
     glOrtho(0.0, X*BSIZE, Y*BSIZE, 0.0, -1.0, 1.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClearColor(1.0, 1.0, 1.0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    /* Set title and render initial setup. */
-    draw_pool(&pool, display);
 
     while(mainloop) {
         /* If go, comp the pool and render it. */
@@ -269,11 +273,9 @@ int main(int argc, char **argv) {
                             break;
                         case SDLK_s:
                             save_pool(&pool, "pool.cone");
-                            pool.dirty = 1;
                             break;
                         case SDLK_l:
                             open_pool(&pool, "pool.cone");
-                            pool.dirty = 1;
                             pool.gencount = 0;
                             break;
                         default:
