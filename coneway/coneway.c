@@ -64,8 +64,8 @@ int draw_pool(struct pool *pool, SDL_Surface *canvas) {
     int x, y, xmod, ymod;
 
     /* Clear the screen and set the draw color. */
-    glClear(GL_COLOR_BUFFER_BIT);
-    glLoadIdentity();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glLoadIdentity();
     glColor3f(FGCOLOR);
 
     /* Render all the alive cells as quads. */
@@ -76,10 +76,10 @@ int draw_pool(struct pool *pool, SDL_Surface *canvas) {
             ymod = y * BSIZE;
 
             if(pool->data[x][y]) { 
-                glVertex2f(xmod, ymod);
-                glVertex2f(xmod+BSIZE, ymod);
-                glVertex2f(xmod+BSIZE, ymod+BSIZE);
-                glVertex2f(xmod, ymod+BSIZE);
+                glVertex3f(xmod, ymod, 0);
+                glVertex3f(xmod+BSIZE, ymod, 0);
+                glVertex3f(xmod+BSIZE, ymod+BSIZE, 0);
+                glVertex3f(xmod, ymod+BSIZE, 0);
             }
         }
     }
@@ -206,7 +206,7 @@ void open_pool(struct pool *pool, char *filename) {
 }
 
 int main(int argc, char **argv) {
-    int go, simspeed, mainloop, mousex, mousey;
+    int go, simspeed, mainloop, mousex, mousey, zoom;
     struct pool pool;
     char wmtbuff[150], mousemask;
     SDL_Surface *display;
@@ -217,6 +217,7 @@ int main(int argc, char **argv) {
     simspeed = 50;
     memset(&pool, 0, sizeof(pool));
     pool.dirty =1;
+    zoom = -50.0;
 
     /* Init SDL, display and openGL. */
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -229,15 +230,25 @@ int main(int argc, char **argv) {
 
     /* opengl 2d init stuff. */
     glEnable(GL_TEXTURE_2D);
-    glDisable(GL_DEPTH_TEST);
-    glViewport(0, 0, X*BSIZE, Y*BSIZE);
+    glClearDepth(1.0);
+    glDepthFunc(GL_LEQUAL);
+    //glDisable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     /* Sets up a 'ortho' projection, ie no perspective. */
-    glOrtho(0.0, X*BSIZE, Y*BSIZE, 0.0, -1.0, 1.0);
+    /* now we use perspective. */
+    glOrtho(0.0, (X*BSIZE), (Y*BSIZE). 0.0, -1.0, 1.0);
+    //glOrtho(0.0, 1.0, 1.0, 0.0, -1.0, 1.0);
+    //gluPerspective(0.0, (X*BSIZE)/(Y*BSIZE), 0.1, 100.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    /* Setup the scale and translate the GL 0.0 mid coords to our 0.0
+       top left based coords. */
+    //glScalef(2.0 / (X*BSIZE), -2.0 / (Y*BSIZE), 0.0);
+    //glTranslatef(-((X*BSIZE)/2.0), -((Y*BSIZE)/2.0), 0.0);
+
+    glViewport(0, 0, X*BSIZE, Y*BSIZE);
     glClearColor(1.0, 1.0, 1.0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -296,6 +307,7 @@ int main(int argc, char **argv) {
                             break;
                         case SDLK_r:
                             rand_pool(&pool);
+                            break;
                         default:
                             break;
                     }

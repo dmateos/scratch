@@ -1,1 +1,1 @@
-gcc -lSDL -lGL -Wall coneway.c
+gcc -lSDL -lGL -lGLU -Wall coneway.c

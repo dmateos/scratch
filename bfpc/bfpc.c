@@ -7,17 +7,20 @@
 #define WSIZE 5
 #define CSIZE ((((CRANGE * CRANGE) * CRANGE) * CRANGE) * WSIZE)
 
-int precomp_array(char *buffer) {
+char *precomp_array() {
     int i,j,k,l;
     long tot = 0;
+    char *buffer;
+
+    buffer = malloc(CSIZE);
  
     for(i = 32; i < 127; i++) {
         for(j = 32; j < 127; j++) {
             for(k = 32; k < 127; k++) {
                 for(l = 32; l < 127; l++) {
                     if(tot >= CSIZE) {
-                        printf("out of space at %ld %d %d %d %d", tot, i,j,k,l);
-                        return -1;
+                        printf("out of space at %ld %d %d %d %d", tot, i, j, k, l);
+                        return NULL;
                     }
                     *(buffer+tot++) = i;
                     *(buffer+tot++) = j;
@@ -29,13 +32,15 @@ int precomp_array(char *buffer) {
         }
     }
     printf("build db of %ld bytes and %ld entries\n", tot, tot/5);
-    return 0;
+    return buffer;
 }
 
 int main(int argc, char **argv) {
-    char *buffer = malloc(CSIZE);
+    char *buffer;
     char seed[3];
     long i = 0;
+
+    buffer = precomp_array();
 
     if(buffer == NULL)
         return 1;
