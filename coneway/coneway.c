@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
     glLoadIdentity();
     /* Sets up a 'ortho' projection, ie no perspective. */
     /* now we use perspective. */
-    glOrtho(0.0, (X*BSIZE), (Y*BSIZE). 0.0, -1.0, 1.0);
+    glOrtho(0.0, (X*BSIZE), (Y*BSIZE), 0.0, -1.0, 1.0);
     //glOrtho(0.0, 1.0, 1.0, 0.0, -1.0, 1.0);
     //gluPerspective(0.0, (X*BSIZE)/(Y*BSIZE), 0.1, 100.0);
 

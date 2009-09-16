@@ -5,6 +5,7 @@
 #include <GL/glu.h>
 
 #include "render.h"
+#include "level.h"
 
 SDL_Surface *init_gfx() {
     SDL_Surface *display;
@@ -37,16 +38,6 @@ void clear_screen(SDL_Surface *surface) {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-inline rect_t build_rect(int x, int y, int w, int h, double r, double g, double b) {
-    rect_t rect;
-
-    rect.x = x; rect.y = y;
-    rect.w = w; rect.h = h;
-    rect.r = r; rect.g = g; rect.b = b;
-
-    return rect;
-}
-
 inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush) {
     /* Set color and draw rect as a GL quad. */
     glColor3f(rect->r, rect->g, rect->b);
@@ -60,6 +51,7 @@ inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush) {
 
     if(flush)
         SDL_GL_SwapBuffers();
+
     return 0;
 }
 
@@ -80,6 +72,26 @@ int draw_rects(SDL_Surface *glsurface, int flush, ...) {
     va_end(ap);
     if(flush)
         SDL_GL_SwapBuffers();
+
     return rcount;
 }
 
+int draw_level(SDL_Surface *glsurface, struct level *level, int xvp, int yvp) {
+    int i;
+    rect_t modr;
+
+    /* Draw player first so we dont fuck with its world pos. */
+    draw_rect(glsurface, &level->objs[PLAYER]->lrect, 0);
+
+    /* Draw everything else reletive to the viewpoint coords. */
+    for(i = 1; i < level->objc; i++) {
+        /* We copy to a local rect and modify that so the users world
+           coords arnt fucked up permenantly. */
+        memcpy(&modr, &level->objs[i]->lrect, sizeof(modr));
+        modr.x += xvp;
+        modr.y += yvp; 
+        draw_rect(glsurface, &modr, 0);
+    }
+    SDL_GL_SwapBuffers();
+    return i;
+}

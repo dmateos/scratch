@@ -1,1 +1,1 @@
-gcc -lSDL -lGL -lglut -lGLU *.c
+gcc -Wall -lSDL -lGL -lglut -lGLU *.c
