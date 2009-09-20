@@ -7,8 +7,10 @@
 #include "level.h"
 
 void incr_step(struct level *level, struct level_obj *obj) {
-    obj->lrect.x += 1;
-    obj->lrect.y += 1;
+    if(obj->lrect.y < 300)
+        obj->lrect.y += 1;
+    else
+        obj->lrect.y = 10;
 }
 
 void check_bang(struct level *level, struct level_obj *obj) {
@@ -18,45 +20,58 @@ void check_bang(struct level *level, struct level_obj *obj) {
             printf("intruder!\n");
 }
 
-void load_map(struct level *level) {
+int load_map(struct level *level, char *mname) {
     FILE *file; 
     char mbuffer[1024], *bptr;
     int x, y = 0;
 
+    /* Read the file into buffer. */
     memset(mbuffer, '\0', sizeof(mbuffer));
-    file = fopen("map.map", "r");
-    fread(mbuffer, 1, 1024, file);
+    if((file = fopen(mname, "r")) == NULL)
+        return -1;
+    fread(mbuffer, sizeof(char), 1024, file);
     fclose(file);    
 
+    /* Split on \n and go thru each line. */
     bptr = strtok(mbuffer, "\n");
-
     while(bptr != NULL) {
         printf("%s\n", bptr);
+        /* For each element in each line. */
         for(x = 0; bptr[x] != '\0'; x++) {
-            if(bptr[x] == 'r')
-                level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*100, y*100, 100, 100, 1, 0, 0)));
-            else if(bptr[x] == 'g')
-                level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*100, y*100, 100, 100, 0, 1, 0)));
-            else if(bptr[x] == 'b')
-                level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*100, y*100, 100, 100, 0, 0, 1)));
+            switch(bptr[x]) {
+                /* For now red,green.blue wall and 'evil' walker. */
+                case 'r':
+                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 1, 0, 0)));
+                    break;
+                case 'g':
+                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 0, 1, 0)));
+                    break;
+                case 'b':
+                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 0, 0, 1)));
+                    break;
+                case 'e':
+                    level_add_obj(level, level_make_obj("evil!", incr_step, build_rect(x*10, y*10, 10, 10, 0, 1.0, 0)));
+                    break;
+                default:
+                    break;
+            }
         }
-        y++;
         bptr = strtok(NULL, "\n");
+        y++;
     }
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
     Screen *screen;
     struct level *level;
     SDL_Event event;
-    int xvp, yvp = 0;
+    int xvp, yvp, zlevel = 0;
+    int mousemask, mousex, mousey;
 
-    level = level_init();
-    screen = init_gfx();
-
-    level_add_obj(level, level_make_obj("evil!", incr_step, build_rect(70, 0, 10, 10, 0, 1.0, 0)));
-    level_add_obj(level, level_make_obj("evil2", check_bang, build_rect(400, 400, 10, 10, 0, 0, 1.0)));
-    load_map(level);
+    level = level_init(300, 300);
+    load_map(level, "map.map");
+    screen = init_gfx(1024, 768);
 
     while(1) {
         clear_screen(screen);
@@ -69,27 +84,39 @@ int main(int argc, char *argv[]) {
                     goto clean_exit;
                     break;
                 case SDL_MOUSEBUTTONDOWN:
+                    mousemask = SDL_GetMouseState(&mousex, &mousey);
+                    if(mousemask & SDL_BUTTON(1)) {
+                        xvp = -mousex/2;
+                        yvp = -mousey/2;
+                    }
                     break;
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym) {
                         case SDLK_DOWN:
                             //level->objs[PLAYER]->lrect.y += 10;
-                            yvp += 10;
+                            yvp -= 10;
                             break;
                         case SDLK_UP:
                             //level->objs[PLAYER]->lrect.y -= 10;
-                            yvp -= 10;
+                            yvp += 10;
                             break;
                         case SDLK_LEFT:
                             //level->objs[PLAYER]->lrect.x -= 10;
-                            xvp -= 10;
+                            xvp += 10;
                             break;
                         case SDLK_RIGHT:
                             //level->objs[PLAYER]->lrect.x += 10;
-                            xvp += 10;
+                            xvp -= 10;
                             break;
                         case SDLK_q:
                             goto clean_exit;
+                            break;
+                        case SDLK_p:
+                            gfx_zoom(1024, 768, ++zlevel);
+                            break;
+                        case SDLK_o:
+                            if(zlevel != 0)
+                                gfx_zoom(1024, 768, --zlevel);
                             break;
                         default:
                             break;

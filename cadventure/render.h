@@ -16,16 +16,15 @@
 typedef SDL_Surface Screen;
 
 /* Init the gfx subsystem. */
-SDL_Surface *init_gfx();
+SDL_Surface *init_gfx(int xres, int yres);
+
+void gfx_zoom(int xres, int yres, int zoom);
 
 /* Clear the surface. */
 void clear_screen(SDL_Surface *surface);
 
 /* Draw rectangle object to surface. */
 inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush); 
-
-/* Draw a bunnch of rectangle objects to surface, MUST end with NULL terminator. */
-int draw_rects(SDL_Surface *glsurface, int flush, ...);
 
 int draw_level(SDL_Surface *glsurface, struct level *level, int xvp, int yvp);
 #endif

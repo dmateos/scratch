@@ -27,7 +27,7 @@ struct level_obj {
 };
 
 rect_t build_rect(int x, int y, int w, int h, double r, double g, double b);
-struct level *level_init();
+struct level *level_init(int xmax, int ymax);
 void level_free(struct level *level);
 int level_add_obj(struct level *level, struct level_obj *object);
 int level_comp(struct level *level);

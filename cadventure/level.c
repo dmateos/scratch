@@ -15,13 +15,15 @@ inline rect_t build_rect(int x, int y, int w, int h, double r, double g, double 
     return rect;
 }
 
-struct level *level_init() {
+struct level *level_init(int xsize, int ysize) {
     struct level *level;
 
     /* Allocate level and initial player object, 
        mind the nested function calls. */
     level = malloc(sizeof *level);
     memset(level, 0, sizeof *level);
+    level->xmax = xsize;
+    level->ymax = ysize;
     level_add_obj(level, level_make_obj("player", NULL, build_rect(800/2, 600/2, 10, 10, 1, 0, 0)));
 
     return level;
@@ -34,7 +36,10 @@ void level_free(struct level *level) {
 
 int level_add_obj(struct level *level, struct level_obj *object) {
     level->objs[level->objc++] = object;
-    printf("oid:%s@%dx%d\n", object->id, object->lrect.x, object->lrect.y);
+    printf("obj:%s @ %dx%d, slot %d, daction: %p\n", 
+            object->id, object->lrect.x, 
+            object->lrect.y, level->objc, 
+            object->default_action);
     return 0;
 }
 
