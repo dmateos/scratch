@@ -24,7 +24,7 @@ struct level *level_init(int xsize, int ysize) {
     memset(level, 0, sizeof *level);
     level->xmax = xsize;
     level->ymax = ysize;
-    level_add_obj(level, level_make_obj("player", NULL, build_rect(800/2, 600/2, 10, 10, 1, 0, 0)));
+    level_add_obj(level, level_make_obj("player", NULL, build_rect(10, 10, 10, 10, 0, 0, 1)));
 
     return level;
 }

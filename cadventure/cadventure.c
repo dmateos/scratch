@@ -102,20 +102,28 @@ int main(int argc, char *argv[]) {
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym) {
                         case SDLK_DOWN:
-                            //level->objs[PLAYER]->lrect.y += 10;
                             yvp -= 10;
                             break;
                         case SDLK_UP:
-                            //level->objs[PLAYER]->lrect.y -= 10;
                             yvp += 10;
                             break;
                         case SDLK_LEFT:
-                            //level->objs[PLAYER]->lrect.x -= 10;
                             xvp += 10;
                             break;
                         case SDLK_RIGHT:
-                            //level->objs[PLAYER]->lrect.x += 10;
                             xvp -= 10;
+                            break;
+                        case SDLK_s:
+                            level->objs[PLAYER]->lrect.y += 10;
+                            break;
+                        case SDLK_w:
+                            level->objs[PLAYER]->lrect.y -= 10;
+                            break;
+                        case SDLK_a:
+                            level->objs[PLAYER]->lrect.x -= 10;
+                            break;
+                        case SDLK_d:
+                            level->objs[PLAYER]->lrect.x += 10;
                             break;
                         case SDLK_q:
                             goto clean_exit;

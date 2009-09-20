@@ -84,11 +84,8 @@ int draw_level(SDL_Surface *glsurface, struct level *level, int xvp, int yvp) {
     glVertex2f(0+xvp, level->ymax+yvp);
     glEnd();
 
-    /* Draw player first so we dont fuck with its world pos. */
-    draw_rect(glsurface, &level->objs[PLAYER]->lrect, 0);
-
     /* Draw everything else reletive to the viewpoint coords. */
-    for(i = 1; i < level->objc; i++) {
+    for(i = 0; i < level->objc; i++) {
         /* We copy to a local rect and modify that so the users world
            coords arnt fucked up permenantly. */
         memcpy(&modr, &level->objs[i]->lrect, sizeof(modr));
