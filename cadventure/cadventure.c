@@ -85,9 +85,18 @@ int main(int argc, char *argv[]) {
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                     mousemask = SDL_GetMouseState(&mousex, &mousey);
-                    if(mousemask & SDL_BUTTON(1)) {
-                        xvp = -mousex/2;
-                        yvp = -mousey/2;
+                    switch(event.button.button) {
+                        case SDL_BUTTON_LEFT:
+                            xvp = -mousex;
+                            yvp = -mousey;
+                            break;
+                        case SDL_BUTTON_WHEELUP:
+                            gfx_zoom(1024, 768, ++zlevel);
+                            break;
+                        case SDL_BUTTON_WHEELDOWN:
+                            if(zlevel > 1)
+                                gfx_zoom(1024, 768, --zlevel);
+                            break;
                     }
                     break;
                 case SDL_KEYDOWN:
@@ -115,7 +124,7 @@ int main(int argc, char *argv[]) {
                             gfx_zoom(1024, 768, ++zlevel);
                             break;
                         case SDLK_o:
-                            if(zlevel != 0)
+                            if(zlevel > 1)
                                 gfx_zoom(1024, 768, --zlevel);
                             break;
                         default:
