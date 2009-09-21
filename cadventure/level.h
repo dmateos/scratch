@@ -1,6 +1,8 @@
 #ifndef _LEVEL_H
 #define _LEVEL_H
 
+#include <GL/glu.h>
+
 /* Object location for the special player object. */
 #define PLAYER 0
 
@@ -8,6 +10,7 @@
 typedef struct render_rect {
     int w,h,x,y;
     float r,g,b;
+    GLuint texture;
 } rect_t;
 
 /* Macro to ease the definition of default action callbacks. */

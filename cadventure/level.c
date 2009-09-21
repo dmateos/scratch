@@ -12,6 +12,7 @@ inline rect_t build_rect(int x, int y, int w, int h, double r, double g, double 
     rect.w = w; rect.h = h;
     rect.r = r; rect.g = g; rect.b = b;
 
+    rect.texture = 0;
     return rect;
 }
 

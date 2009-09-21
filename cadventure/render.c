@@ -4,6 +4,10 @@
 #include <SDL/SDL_opengl.h>
 #include <GL/glu.h>
 
+#include <IL/il.h>
+#include <IL/ilu.h>
+#include <IL/ilut.h>
+
 #include "render.h"
 #include "level.h"
 
@@ -23,18 +27,21 @@ SDL_Surface *init_gfx(int xres, int yres) {
     glClearDepth(1.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-xres, xres, yres, -yres, -500.0, 500.0);
-    //glOrtho(0, 800, 600, 0, -500, 500);    
+    glOrtho(-xres/2, xres/2, yres/2, -yres/2, -500.0, 500.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClearColor(1.0, 1.0, 1.0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //glRotatef(35.264, 1.0, 0.0, 0.0);
-    //glRotatef(-45.0, 0.0, 1.0, 0.0);
     glRotatef(-60, 1, 0, 0);
     glRotatef(-45, 0, 0, 1);
+
+     /* Devil image loading library opengl config. */
+     glEnable(GL_TEXTURE_2D);
+     ilInit();
+     iluInit();
+     ilutRenderer(ILUT_OPENGL); 
 
     return display;
 }
@@ -42,7 +49,7 @@ SDL_Surface *init_gfx(int xres, int yres) {
 void gfx_zoom(int xres, int yres, int zoom) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-xres/zoom, xres/zoom, yres/zoom, -yres/zoom, -500, 500);
+    glOrtho(-(xres/2)/zoom, (xres/2)/zoom, (yres/2)/zoom, -(yres/2)/zoom, -500, 500);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -58,10 +65,20 @@ inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush) {
     /* Set color and draw rect as a GL quad. */
     glColor3f(rect->r, rect->g, rect->b);
 
+    if(rect->texture > 0)
+        glBindTexture(GL_TEXTURE_2D, rect->texture);
+
     glBegin(GL_QUADS);
+    glTexCoord2f(rect->x, rect->y);
     glVertex2f(rect->x, rect->y);
+
+    glTexCoord2f(rect->x+rect->w, rect->y);
     glVertex2f(rect->x+rect->w, rect->y);
+
+    glTexCoord2f(rect->x+rect->w, rect->y+rect->h);
     glVertex2f(rect->x+rect->w, rect->y+rect->h);
+
+    glTexCoord2f(rect->x, rect->y+rect->h);
     glVertex2f(rect->x, rect->y+rect->h);
     glEnd();
 
@@ -69,6 +86,14 @@ inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush) {
         SDL_GL_SwapBuffers();
 
     return 0;
+}
+
+GLuint load_texture_gif(const char *filename) {
+    GLuint texture = ilutGLLoadImage(filename);
+    printf("%ud\n", texture);
+    if(texture == 0)
+        exit(1);
+    return texture;
 }
 
 int draw_level(SDL_Surface *glsurface, struct level *level, int xvp, int yvp) {

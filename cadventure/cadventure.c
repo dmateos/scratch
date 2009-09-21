@@ -24,6 +24,7 @@ int load_map(struct level *level, char *mname) {
     FILE *file; 
     char mbuffer[1024], *bptr;
     int x, y = 0;
+    GLint treetex;
 
     /* Read the file into buffer. */
     memset(mbuffer, '\0', sizeof(mbuffer));
@@ -31,6 +32,10 @@ int load_map(struct level *level, char *mname) {
         return -1;
     fread(mbuffer, sizeof(char), 1024, file);
     fclose(file);    
+
+    /* image load test. */
+    treetex = 0;
+    //treetex = load_texture_gif("grass.gif");
 
     /* Split on \n and go thru each line. */
     bptr = strtok(mbuffer, "\n");

@@ -26,5 +26,7 @@ void clear_screen(SDL_Surface *surface);
 /* Draw rectangle object to surface. */
 inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush); 
 
+GLuint load_texture_gif(const char *filename);
+
 int draw_level(SDL_Surface *glsurface, struct level *level, int xvp, int yvp);
 #endif
