@@ -3,11 +3,6 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 #include <GL/glu.h>
-
-#include <IL/il.h>
-#include <IL/ilu.h>
-#include <IL/ilut.h>
-
 #include "render.h"
 #include "level.h"
 
@@ -27,34 +22,33 @@ SDL_Surface *init_gfx(int xres, int yres) {
     glClearDepth(1.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-xres/2, xres/2, yres/2, -yres/2, -500.0, 500.0);
-
+    glOrtho(-xres, xres, yres, -yres, -0.1, 2.0);
+    //gluPerspective(45.0f, (GLfloat)xres/(GLfloat)yres, 0.1f, 100.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClearColor(1.0, 1.0, 1.0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glRotatef(-60, 1, 0, 0);
-    glRotatef(-45, 0, 0, 1);
+    glRotatef(-35, 1.0, 0.0, 0.0);
+    glRotatef(-45.0, 0.0, 0.0, 1.0);
+    //glEnable(GL_TEXTURE_2D);
+    //glEnable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_LEQUAL);
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-     /* Devil image loading library opengl config. */
-     glEnable(GL_TEXTURE_2D);
-     ilInit();
-     iluInit();
-     ilutRenderer(ILUT_OPENGL); 
-
+    glViewport(0, 0, 1024, 768);
     return display;
 }
 
 void gfx_zoom(int xres, int yres, int zoom) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-(xres/2)/zoom, (xres/2)/zoom, (yres/2)/zoom, -(yres/2)/zoom, -500, 500);
+    glOrtho(0/zoom, xres/zoom, yres/zoom, 0/zoom, -100, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glRotatef(-60, 1, 0, 0);
-    glRotatef(-45, 0, 0, 1);
+    glRotatef(35.264, 1, 0, 0);
+    glRotatef(-45, 0, 1, 0);
 }
 
 void clear_screen(SDL_Surface *surface) {
@@ -65,20 +59,20 @@ inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush) {
     /* Set color and draw rect as a GL quad. */
     glColor3f(rect->r, rect->g, rect->b);
 
-    if(rect->texture > 0)
+    //if(rect->texture > 0)
         glBindTexture(GL_TEXTURE_2D, rect->texture);
 
     glBegin(GL_QUADS);
-    glTexCoord2f(rect->x, rect->y);
+    glTexCoord3f(0.0, 0.0, 1.0);
     glVertex2f(rect->x, rect->y);
 
-    glTexCoord2f(rect->x+rect->w, rect->y);
+    glTexCoord3f(1.0, 0.0, 1.0);
     glVertex2f(rect->x+rect->w, rect->y);
 
-    glTexCoord2f(rect->x+rect->w, rect->y+rect->h);
+    glTexCoord3f(1.0, 1.0, 1.0);
     glVertex2f(rect->x+rect->w, rect->y+rect->h);
 
-    glTexCoord2f(rect->x, rect->y+rect->h);
+    glTexCoord3f(0.0, 1.0, 1.0);
     glVertex2f(rect->x, rect->y+rect->h);
     glEnd();
 
@@ -88,11 +82,32 @@ inline int draw_rect(SDL_Surface *glsurface, rect_t *rect, int flush) {
     return 0;
 }
 
-GLuint load_texture_gif(const char *filename) {
-    GLuint texture = ilutGLLoadImage(filename);
-    printf("%ud\n", texture);
-    if(texture == 0)
-        exit(1);
+GLuint load_texture(char *filename) {
+    int x, y;
+    FILE *file;
+    unsigned char *imgdata;    
+    GLuint texture;
+
+    /* Allocate space for image. */
+    texture = x = y = 32;
+    imgdata = malloc(x * y * 3);
+    
+    if((file = fopen(filename, "r")) == NULL)
+        return 0;
+
+    fread(imgdata, x*y*3, 1, file);
+    fclose(file);
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //gluBuild2DMipmaps(GL_TEXTURE_2D, 3, x, y, GL_RGB, GL_UNSIGNED_BYTE, imgdata);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, imgdata);
     return texture;
 }
 
@@ -100,15 +115,6 @@ int draw_level(SDL_Surface *glsurface, struct level *level, int xvp, int yvp) {
     int i;
     rect_t modr;
    
-    /* Draw map boarder. */
-    glColor3f(0, 0, 0);
-    glBegin(GL_LINE_LOOP);;
-    glVertex2f(0+xvp, 0+yvp);
-    glVertex2f(level->xmax+xvp, 0+yvp);
-    glVertex2f(level->xmax+xvp, level->ymax+yvp);
-    glVertex2f(0+xvp, level->ymax+yvp);
-    glEnd();
-
     /* Draw everything else reletive to the viewpoint coords. */
     for(i = 0; i < level->objc; i++) {
         /* We copy to a local rect and modify that so the users world

@@ -37,10 +37,10 @@ void level_free(struct level *level) {
 
 int level_add_obj(struct level *level, struct level_obj *object) {
     level->objs[level->objc++] = object;
-    printf("obj:%s @ %dx%d, slot %d, daction: %p\n", 
+    printf("obj:%s @ %dx%d, slot %d, daction: %p, tex:%d\n", 
             object->id, object->lrect.x, 
             object->lrect.y, level->objc, 
-            object->default_action);
+            object->default_action, object->lrect.texture);
     return 0;
 }
 

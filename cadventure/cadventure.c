@@ -24,7 +24,7 @@ int load_map(struct level *level, char *mname) {
     FILE *file; 
     char mbuffer[1024], *bptr;
     int x, y = 0;
-    GLint treetex;
+    struct level_obj *obj;
 
     /* Read the file into buffer. */
     memset(mbuffer, '\0', sizeof(mbuffer));
@@ -32,10 +32,6 @@ int load_map(struct level *level, char *mname) {
         return -1;
     fread(mbuffer, sizeof(char), 1024, file);
     fclose(file);    
-
-    /* image load test. */
-    treetex = 0;
-    //treetex = load_texture_gif("grass.gif");
 
     /* Split on \n and go thru each line. */
     bptr = strtok(mbuffer, "\n");
@@ -46,16 +42,20 @@ int load_map(struct level *level, char *mname) {
             switch(bptr[x]) {
                 /* For now red,green.blue wall and 'evil' walker. */
                 case 'r':
-                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 1, 0, 0)));
+                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*32, y*32, 32, 32, 1, 0, 0)));
                     break;
                 case 'g':
-                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 0, 1, 0)));
+                    obj = level_make_obj("wall", NULL, build_rect(x*32, y*32, 32, 32, 0, 1, 0));
+                    obj->lrect.texture = load_texture("grass-raw.raw");
+                    printf("Texture ptr = %d\n", obj->lrect.texture);
+                    level_add_obj(level, obj);
+                    //level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 0, 1, 0)));
                     break;
                 case 'b':
-                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*10, y*10, 10, 10, 0, 0, 1)));
+                    level_add_obj(level, level_make_obj("wall", NULL, build_rect(x*32, y*32, 32, 32, 0, 0, 1)));
                     break;
                 case 'e':
-                    level_add_obj(level, level_make_obj("evil!", incr_step, build_rect(x*10, y*10, 10, 10, 0, 1.0, 0)));
+                    level_add_obj(level, level_make_obj("evil!", incr_step, build_rect(x*32, y*32, 32, 32, 0, 1.0, 0)));
                     break;
                 default:
                     break;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     int xvp, yvp, zlevel = 0;
     int mousemask, mousex, mousey;
 
-    level = level_init(300, 300);
+    level = level_init(300*32, 300*32);
     load_map(level, "map.map");
     screen = init_gfx(1024, 768);
 
