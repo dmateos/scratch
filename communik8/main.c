@@ -17,6 +17,8 @@ struct people_list {
 void handle_connection(int sd) {
     struct people_list *tmp;
     struct list_head *pos;
+    char pbuff[1024];
+
     printf("new connection from %d\n", sd);
     
     tmp = malloc(sizeof(*tmp));
@@ -25,7 +27,8 @@ void handle_connection(int sd) {
 
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
-        write_list_add(tmp->sd, "new con\n");
+        sprintf(pbuff, "new con from %d\n", sd);
+        write_list_add(tmp->sd, pbuff);
     }
     cont++;
 }
@@ -33,18 +36,21 @@ void handle_connection(int sd) {
 void handle_read(int sd, char *buffer) {
     struct people_list *tmp;
     struct list_head *pos, *q;
+    char pbuff[1024];
  
     printf("from %d %s", sd, buffer);
 
     list_for_each_safe(pos, q, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
-        write_list_add(tmp->sd, buffer);
+        sprintf(pbuff, "%d said: %s", sd, buffer);
+        write_list_add(tmp->sd, pbuff);
     }
 }
 
 void handle_discon(int sd) {
     struct people_list *tmp;
     struct list_head *pos, *q;
+    char pbuff[1024];
 
     printf("discon from %d\n", sd);
 
@@ -58,7 +64,8 @@ void handle_discon(int sd) {
 
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
-        write_list_add(tmp->sd, "discon\n");
+        sprintf(pbuff, "discon from %d\n", sd);
+        write_list_add(tmp->sd, pbuff);
     }
     cont--;
 }
