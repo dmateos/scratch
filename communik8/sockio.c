@@ -28,9 +28,9 @@ struct sock_dec_list _sockreadlist;
 struct sock_dec_list _sockwritelist;
 
 /* Function pointers to hook into event system with. */
-newcon_fp _newconfp;
-read_fp _readfp;
-discon_fp _disconfp;
+sio_newcon_fp _newconfp;
+sio_read_fp _readfp;
+sio_discon_fp _disconfp;
 
 static int setup_socket() {
     int lsock, csockinfosize;
@@ -64,7 +64,7 @@ static int setup_socket() {
     return 0;
 }
 
-int setup_socket_io(newcon_fp nfp, read_fp rdfp, discon_fp dcfp) {
+int sio_setup(sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
     /* Setup event pointers and socket subsystem. */
     _newconfp = nfp;
     _readfp = rdfp;
@@ -73,11 +73,11 @@ int setup_socket_io(newcon_fp nfp, read_fp rdfp, discon_fp dcfp) {
 
     /* Setup linked list for descriptors. */
     INIT_LIST_HEAD(&_sockreadlist.list);
-    read_list_add(_server_sock);
+    sio_readlist_add(_server_sock);
     INIT_LIST_HEAD(&_sockwritelist.list);
 }
 
-void free_socket_io() {
+void sio_close() {
     struct sock_dec_list *tmp;
     struct list_head *pos, *q;
 
@@ -96,7 +96,7 @@ void free_socket_io() {
     }
 }
 
-int read_list_add(int sd) {
+int sio_readlist_add(int sd) {
     struct sock_dec_list *tmp;
     tmp = malloc(sizeof(*tmp));
     tmp->sd = sd;
@@ -105,7 +105,7 @@ int read_list_add(int sd) {
     return 0;
 }
 
-int write_list_add(int sd, char *buffer) {
+int sio_writelist_add(int sd, char *buffer) {
     struct sock_dec_list *tmp;
     tmp = malloc(sizeof(*tmp));
     tmp->sd = sd;
@@ -118,7 +118,7 @@ int write_list_add(int sd, char *buffer) {
     return 0;
 }
 
-int poll_io() {
+int sio_poll() {
     int i, rlen;
     fd_set read_list, write_list;
     struct list_head *pos, *q;
@@ -156,7 +156,7 @@ int poll_io() {
         if(tmp->sd == _server_sock && FD_ISSET(tmp->sd, &read_list)) {
             int csock = accept(_server_sock, NULL, 0);
             _newconfp(csock);
-            read_list_add(csock);
+            sio_readlist_add(csock);
         }
         /* Clients in the read table. */
         else if(FD_ISSET(tmp->sd, &read_list)) {
