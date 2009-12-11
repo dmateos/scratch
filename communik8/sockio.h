@@ -1,4 +1,8 @@
-/* This implements a socket server using asyncronus IO via select(), calls
+/* 
+ * Synchronus IO multiplexing with an event system.
+ * Daniel Mateos, Dec 11th, 2009
+ *
+ * This implements a socket server using asyncronus IO via select(), calls
  * are received via subscribing to various events, ie newcon, discon, read, write
  */
 #ifndef _SOCKET_IO_H

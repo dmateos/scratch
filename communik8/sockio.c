@@ -1,7 +1,10 @@
+/* 
+ * Synchronus IO multiplexing with an event system.
+ * Daniel Mateos, Dec 11th, 2009
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -11,6 +14,7 @@
 
 #include "list.h" /* Linux kernel linked list implementation.*/
 #include "sockio.h"
+#include "util.h" 
 
 /* listening socket descriptor. */
 int _server_sock;
@@ -86,35 +90,39 @@ void sio_close() {
         tmp = list_entry(pos, struct sock_dec_list, list);
         close(tmp->sd);
         list_del(pos);
-        free(tmp); 
+        efree(tmp); 
     }
     list_for_each_safe(pos, q, &_sockwritelist.list) {
         tmp = list_entry(pos, struct sock_dec_list, list);
-        free(tmp->data);
+        efree(tmp->data);
         list_del(pos);
-        free(tmp);
+        efree(tmp);
     }
 }
 
 int sio_readlist_add(int sd) {
     struct sock_dec_list *tmp;
-    tmp = malloc(sizeof(*tmp));
+
+    tmp = emalloc(sizeof(*tmp));
     tmp->sd = sd;
     list_add(&(tmp->list), &(_sockreadlist.list));
     printf("descriptor %d added\n", tmp->sd);
+
     return 0;
 }
 
 int sio_writelist_add(int sd, char *buffer) {
     struct sock_dec_list *tmp;
-    tmp = malloc(sizeof(*tmp));
+
+    tmp = emalloc(sizeof(*tmp));
     tmp->sd = sd;
-    tmp->data = malloc(strlen(buffer) + 1);
+    tmp->data = emalloc(strlen(buffer) + 1);
     memset(tmp->data, '\0', strlen(buffer)+1);
     memcpy(tmp->data, buffer, strlen(buffer));
     list_add(&(tmp->list), &(_sockwritelist.list));
     printf("message for %d added to write list\n", tmp->sd);
     printf("%s", (char*)tmp->data);
+
     return 0;
 }
 
@@ -123,7 +131,7 @@ int sio_poll() {
     fd_set read_list, write_list;
     struct list_head *pos, *q;
     struct sock_dec_list *tmp;
-    //char *readbuff = malloc(1024);
+    //char *readbuff = emalloc(1024);
     char readbuff[1024];
 
     memset(readbuff, '\0', 1024);
@@ -174,7 +182,7 @@ int sio_poll() {
                 close(tmp->sd);
                 _disconfp(tmp->sd);
                 list_del(pos);
-                free(tmp);
+                efree(tmp);
             }
         }
     }
@@ -186,9 +194,9 @@ int sio_poll() {
             /* Send off the message and remove it from the list. */
             printf("sending message to %d\n", tmp->sd);
             send(tmp->sd, tmp->data, strlen(tmp->data), 0);
-            free(tmp->data);
+            efree(tmp->data);
             list_del(pos);
-            free(tmp);
+            efree(tmp);
         }
     }
     return 0;
