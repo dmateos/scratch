@@ -7,6 +7,8 @@
 #include "sockio.h"
 #include "list.h"
 
+#define BUFSIZE 1024
+
 int cont = 0;
 
 struct people_list {
@@ -17,17 +19,21 @@ struct people_list {
 void handle_connection(int sd) {
     struct people_list *tmp;
     struct list_head *pos;
-    char pbuff[1024];
+    char pbuff[BUFSIZE];
 
     printf("new connection from %d\n", sd);
-    
+
+    /* Allocate a new person entry and put the socket
+     * desc into it. */    
     tmp = malloc(sizeof(*tmp));
     tmp->sd = sd;
     list_add(&(tmp->list), &(peoples.list));
 
+    /* Add to every other person to the write queue telling them
+     * this guy has joined. */
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
-        sprintf(pbuff, "new con from %d\n", sd);
+        snprintf(pbuff, BUFSIZE, "new con from %d\n", sd);
         sio_writelist_add(tmp->sd, pbuff);
     }
     cont++;
@@ -36,13 +42,14 @@ void handle_connection(int sd) {
 void handle_read(int sd, char *buffer) {
     struct people_list *tmp;
     struct list_head *pos;
-    char pbuff[1024];
+    char pbuff[BUFSIZE];
  
     printf("from %d %s", sd, buffer);
 
+    /* Echo what was said to everyone in the person list. */
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
-        sprintf(pbuff, "%d said: %s", sd, buffer);
+        snprintf(pbuff, BUFSIZE, "%d said: %s", sd, buffer);
         sio_writelist_add(tmp->sd, pbuff);
     }
 }
@@ -50,10 +57,11 @@ void handle_read(int sd, char *buffer) {
 void handle_discon(int sd) {
     struct people_list *tmp;
     struct list_head *pos, *q;
-    char pbuff[1024];
+    char pbuff[BUFSIZE];
 
     printf("discon from %d\n", sd);
 
+    /* Find them in the person list and remove. */
     list_for_each_safe(pos, q, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
         if(tmp->sd == sd) {
@@ -62,9 +70,10 @@ void handle_discon(int sd) {
         }
     }
 
+    /* Tell everyone. */
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
-        sprintf(pbuff, "discon from %d\n", sd);
+        snprintf(pbuff, BUFSIZE, "discon from %d\n", sd);
         sio_writelist_add(tmp->sd, pbuff);
     }
     cont--;

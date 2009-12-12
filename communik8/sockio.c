@@ -16,20 +16,24 @@
 #include "sockio.h"
 #include "util.h" 
 
-/* listening socket descriptor. */
-int _server_sock;
+#define BUFSIZE 1024
 
-/* Linked list of socket descriptors. */
-struct sock_dec_list {
+/* Linked list for read list of sockets to poll. */
+struct sockreadlist {
+    int sd;
+    struct list_head list;
+    struct sockaddr_in saddrs;
+} _sockreadlist;
+
+/* Linked list for write queue of messages to send to sockets. */
+struct sockwritelist {
     int sd;
     struct list_head list;
     void *data;
-};
+} _sockwritelist;
 
-/* Instance of the linked list for read polling. */
-struct sock_dec_list _sockreadlist;
-
-struct sock_dec_list _sockwritelist;
+/* listening socket descriptor. */
+int _server_sock;
 
 /* Function pointers to hook into event system with. */
 sio_newcon_fp _newconfp;
@@ -39,11 +43,10 @@ sio_discon_fp _disconfp;
 static int setup_socket() {
     int lsock, csockinfosize;
     struct sockaddr_in lsockaddr, csockinfo;
-    int on;
-
-    on = 1;
+    char on;
 
     /* Clear/init some data. */
+    on = 1;
     memset(&lsockaddr, 0, sizeof(lsockaddr));
     memset(&csockinfo, 0, sizeof(csockinfo));
     csockinfosize = sizeof(csockinfo);
@@ -61,8 +64,8 @@ static int setup_socket() {
         return -1;
 
     /* Set as non blocking so we can select() the mother fucker. */
-    ioctl(lsock, FIONBIO, (char *)&on);
-    setsockopt(lsock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+    ioctl(lsock, FIONBIO, &on);
+    setsockopt(lsock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(char));
 
     _server_sock = lsock;
     return 0;
@@ -73,46 +76,53 @@ int sio_setup(sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
     _newconfp = nfp;
     _readfp = rdfp;
     _disconfp = dcfp;
-    setup_socket();
+    if(setup_socket())
+        return -1;
 
     /* Setup linked list for descriptors. */
     INIT_LIST_HEAD(&_sockreadlist.list);
-    sio_readlist_add(_server_sock);
+    sio_readlist_add(_server_sock, NULL);
     INIT_LIST_HEAD(&_sockwritelist.list);
+    return 0;
 }
 
 void sio_close() {
-    struct sock_dec_list *tmp;
+    struct sockreadlist *rtmp;
+    struct sockwritelist *wtmp;
     struct list_head *pos, *q;
 
+    /* Close server socket and clean out the lists of anything
+     * left allocated. */
     close(_server_sock);
     list_for_each_safe(pos, q, &_sockreadlist.list) {
-        tmp = list_entry(pos, struct sock_dec_list, list);
-        close(tmp->sd);
+        rtmp = list_entry(pos, struct sockreadlist, list);
+        close(rtmp->sd);
         list_del(pos);
-        efree(tmp); 
+        efree(rtmp); 
     }
     list_for_each_safe(pos, q, &_sockwritelist.list) {
-        tmp = list_entry(pos, struct sock_dec_list, list);
-        efree(tmp->data);
+        wtmp = list_entry(pos, struct sockwritelist, list);
+        efree(wtmp->data);
         list_del(pos);
-        efree(tmp);
+        efree(wtmp);
     }
 }
 
-int sio_readlist_add(int sd) {
-    struct sock_dec_list *tmp;
+int sio_readlist_add(int sd, struct sockaddr_in *saddr) {
+    struct sockreadlist *tmp;
 
     tmp = emalloc(sizeof(*tmp));
     tmp->sd = sd;
+    if(saddr != NULL)
+        memcpy(&tmp->saddrs, saddr, sizeof(tmp->saddrs));
     list_add(&(tmp->list), &(_sockreadlist.list));
     printf("descriptor %d added\n", tmp->sd);
 
     return 0;
 }
 
-int sio_writelist_add(int sd, char *buffer) {
-    struct sock_dec_list *tmp;
+int sio_writelist_add(int sd, const char *buffer) {
+    struct sockwritelist *tmp;
 
     tmp = emalloc(sizeof(*tmp));
     tmp->sd = sd;
@@ -121,7 +131,7 @@ int sio_writelist_add(int sd, char *buffer) {
     memcpy(tmp->data, buffer, strlen(buffer));
     list_add(&(tmp->list), &(_sockwritelist.list));
     printf("message for %d added to write list\n", tmp->sd);
-    printf("%s", (char*)tmp->data);
+    printf("\t%s", (char*)tmp->data);
 
     return 0;
 }
@@ -130,27 +140,30 @@ int sio_poll() {
     int i, rlen;
     fd_set read_list, write_list;
     struct list_head *pos, *q;
-    struct sock_dec_list *tmp;
-    //char *readbuff = emalloc(1024);
-    char readbuff[1024];
+    struct sockreadlist *rtmp;
+    struct sockwritelist *wtmp;
+    char readbuff[BUFSIZE];
+    struct sockaddr_in cinfo;
+    socklen_t cinfolen;
 
-    memset(readbuff, '\0', 1024);
+    memset(readbuff, '\0', BUFSIZE);
     FD_ZERO(&read_list);
     FD_ZERO(&write_list);
+    cinfolen = sizeof(cinfo);
 
     printf("polling IO, read-list: ");
     /* Add entries from list to the bit field. */
     list_for_each(pos, &_sockreadlist.list) {
-        tmp = list_entry(pos, struct sock_dec_list, list);
-        FD_SET(tmp->sd, &read_list);
-        printf("%d ", tmp->sd);
+        rtmp = list_entry(pos, struct sockreadlist, list);
+        FD_SET(rtmp->sd, &read_list);
+        printf("%d ", rtmp->sd);
     }
     printf(", write-list: ");
      /* Add messages from write list to the bitfield. */
     list_for_each(pos, &_sockwritelist.list) {
-        tmp = list_entry(pos, struct sock_dec_list, list);
-        FD_SET(tmp->sd, &write_list);
-        printf("%d ", tmp->sd);
+        wtmp = list_entry(pos, struct sockwritelist, list);
+        FD_SET(wtmp->sd, &write_list);
+        printf("%d ", wtmp->sd);
     }
     printf("\n");
 
@@ -159,44 +172,42 @@ int sio_poll() {
     
     /* Step thru the read list and see if their bitfield is marked. */
     list_for_each_safe(pos, q, &_sockreadlist.list) {
-        tmp = list_entry(pos, struct sock_dec_list, list);
+        rtmp = list_entry(pos, struct sockreadlist, list);
         /* The server socket. */
-        if(tmp->sd == _server_sock && FD_ISSET(tmp->sd, &read_list)) {
-            int csock = accept(_server_sock, NULL, 0);
+        if(rtmp->sd == _server_sock && FD_ISSET(rtmp->sd, &read_list)) {
+            int csock = accept(_server_sock, (struct sockaddr*)&cinfo, &cinfolen);
             _newconfp(csock);
-            sio_readlist_add(csock);
+            sio_readlist_add(csock, &cinfo);
         }
         /* Clients in the read table. */
-        else if(FD_ISSET(tmp->sd, &read_list)) {
+        else if(FD_ISSET(rtmp->sd, &read_list)) {
             /* Buffer data and fire an event function call. */
-            if((rlen = recv(tmp->sd, readbuff, 1023, 0)) != 0) {
+            if((rlen = recv(rtmp->sd, readbuff, BUFSIZE-1, 0)) != 0) {
                 readbuff[rlen+1] = '\0';
-                _readfp(tmp->sd, readbuff);
-                //free(readbuff);
+                _readfp(rtmp->sd, readbuff);
             }
             /* Discon */
             else {
                 /* Free read buffer, close socket, send discon event
                  * remove the descriptor from linked list. */
-                //free(readbuff);
-                close(tmp->sd);
-                _disconfp(tmp->sd);
+                close(rtmp->sd);
+                _disconfp(rtmp->sd);
                 list_del(pos);
-                efree(tmp);
+                efree(rtmp);
             }
         }
     }
 
    /* Same for write list. */
    list_for_each_safe(pos, q, &_sockwritelist.list) {
-        tmp = list_entry(pos, struct sock_dec_list, list);
-        if(FD_ISSET(tmp->sd, &write_list)) {
+        wtmp = list_entry(pos, struct sockwritelist, list);
+        if(FD_ISSET(wtmp->sd, &write_list)) {
             /* Send off the message and remove it from the list. */
-            printf("sending message to %d\n", tmp->sd);
-            send(tmp->sd, tmp->data, strlen(tmp->data), 0);
-            efree(tmp->data);
+            printf("sending message to %d\n", wtmp->sd);
+            send(wtmp->sd, wtmp->data, strlen(wtmp->data), 0);
+            efree(wtmp->data);
             list_del(pos);
-            efree(tmp);
+            efree(wtmp);
         }
     }
     return 0;
