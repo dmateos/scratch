@@ -40,7 +40,10 @@ sio_newcon_fp _newconfp;
 sio_read_fp _readfp;
 sio_discon_fp _disconfp;
 
-static int setup_socket() {
+/*
+ * Sets up a standard TCP listening socket. 
+ */
+static int setup_socket(int port) {
     int lsock, csockinfosize;
     struct sockaddr_in lsockaddr, csockinfo;
     char on;
@@ -54,7 +57,7 @@ static int setup_socket() {
     /* Setup our server socket to a listening state. */
     lsockaddr.sin_family = AF_INET;
     lsockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    lsockaddr.sin_port = htons(13373);
+    lsockaddr.sin_port = htons(port);
 
     if((lsock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         return -1;
@@ -65,10 +68,10 @@ static int setup_socket() {
 
     /* Set as non blocking so we can select() the mother fucker. */
     ioctl(lsock, FIONBIO, &on);
-    setsockopt(lsock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(char));
+    setsockopt(lsock, SOL_IP, SO_REUSEADDR, &on, sizeof(char));
 
-    _server_sock = lsock;
-    return 0;
+    printf("listening on tcp port %d\n", port);
+    return lsock;
 }
 
 int sio_setup(sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
@@ -76,7 +79,7 @@ int sio_setup(sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
     _newconfp = nfp;
     _readfp = rdfp;
     _disconfp = dcfp;
-    if(setup_socket())
+    if((_server_sock = setup_socket(3141)) < 0)
         return -1;
 
     /* Setup linked list for descriptors. */
@@ -119,6 +122,19 @@ int sio_readlist_add(int sd, struct sockaddr_in *saddr) {
     printf("descriptor %d added\n", tmp->sd);
 
     return 0;
+}
+
+int sio_readlist_remove(int sd) {
+    struct sockreadlist *tmp;
+    struct list_head *prev, *q;
+
+    list_for_each_safe(prev, q, &_sockreadlist.list) {
+        tmp = list_entry(pos, struct sockreadlist, list);
+        close(tmp->sd);
+        list_del(pos);
+        efree(rtmp);
+    }
+   return 0;
 }
 
 int sio_writelist_add(int sd, const char *buffer) {

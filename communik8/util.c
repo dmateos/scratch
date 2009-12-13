@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "util.h"
 
-void *emalloc(int size) {
+void *_emalloc(const char *function, int size) {
     /* Catch any malloc errors. */
     void *ptr = malloc(size+sizeof(int));
     if(ptr == NULL) {
@@ -14,21 +14,21 @@ void *emalloc(int size) {
  * with efree. */
 #ifdef _MEMDEBUG
     ((int*)ptr)[0] = size;
-    printf("dynamic alloc of %d\n", size);
+    printf("dynamic alloc of %d by %s\n", size, function);
     return ((int*)ptr)+1;
 #else
     return ptr;
 #endif
 }
 
-void efree(void *data) {
+void _efree(const char *function, void *data) {
     if(data == NULL)
         return;
 
 /* Equiv of above, read the size then free the pointer 
  * put back to the place free() expects. */
 #ifdef _MEMDEBUG
-    printf("freeing ptr of size %d\n", *(((int*)data)-1));
+    printf("freeing ptr of size %d by %s\n", *(((int*)data)-1), function);
     free(((int*)data)-1);
 #else
     free(data);

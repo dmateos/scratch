@@ -25,6 +25,9 @@ void sio_close();
 /* Adds to the list of socket descriptors to poll for input. */
 int sio_readlist_add(int sd, struct sockaddr_in *saddr);
 
+/* Remove descriptor from the read list. */
+int sio_readlist_del(int sd);
+
 /* Add a message and socket to the write buffer to be sent off 
    when possbile. */
 int sio_writelist_add(int sd, const char *buffer);
