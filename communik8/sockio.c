@@ -18,28 +18,6 @@
 
 #define BUFSIZE 1024
 
-/* Linked list for read list of sockets to poll. */
-struct sockreadlist {
-    int sd;
-    struct list_head list;
-    struct sockaddr_in saddrs;
-} _sockreadlist;
-
-/* Linked list for write queue of messages to send to sockets. */
-struct sockwritelist {
-    int sd;
-    struct list_head list;
-    void *data;
-} _sockwritelist;
-
-/* listening socket descriptor. */
-int _server_sock;
-
-/* Function pointers to hook into event system with. */
-sio_newcon_fp _newconfp;
-sio_read_fp _readfp;
-sio_discon_fp _disconfp;
-
 /*
  * Sets up a standard TCP listening socket. 
  */
@@ -74,70 +52,76 @@ static int setup_socket(int port) {
     return lsock;
 }
 
-int sio_setup(sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
+struct sio_socket *sio_setup(int port, sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
+    struct sio_socket *socket;
+
+    socket = emalloc(sizeof(*socket));
+
     /* Setup event pointers and socket subsystem. */
-    _newconfp = nfp;
-    _readfp = rdfp;
-    _disconfp = dcfp;
-    if((_server_sock = setup_socket(3141)) < 0)
-        return -1;
+    socket->_newconfp = nfp;
+    socket->_readfp = rdfp;
+    socket->_disconfp = dcfp;
+    if((socket->_server_sock = setup_socket(port)) < 0)
+        return NULL;
+    socket->_port = port;
 
     /* Setup linked list for descriptors. */
-    INIT_LIST_HEAD(&_sockreadlist.list);
-    sio_readlist_add(_server_sock, NULL);
-    INIT_LIST_HEAD(&_sockwritelist.list);
-    return 0;
+    INIT_LIST_HEAD(&socket->_sockreadlist.list);
+    sio_readlist_add(socket, socket->_server_sock, NULL);
+    INIT_LIST_HEAD(&socket->_sockwritelist.list);
+    return socket;
 }
 
-void sio_close() {
+void sio_close(struct sio_socket *socket) {
     struct sockreadlist *rtmp;
     struct sockwritelist *wtmp;
     struct list_head *pos, *q;
 
     /* Close server socket and clean out the lists of anything
      * left allocated. */
-    close(_server_sock);
-    list_for_each_safe(pos, q, &_sockreadlist.list) {
+    close(socket->_server_sock);
+    list_for_each_safe(pos, q, &socket->_sockreadlist.list) {
         rtmp = list_entry(pos, struct sockreadlist, list);
         close(rtmp->sd);
         list_del(pos);
         efree(rtmp); 
     }
-    list_for_each_safe(pos, q, &_sockwritelist.list) {
+    list_for_each_safe(pos, q, &socket->_sockwritelist.list) {
         wtmp = list_entry(pos, struct sockwritelist, list);
         efree(wtmp->data);
         list_del(pos);
         efree(wtmp);
     }
+    efree(socket);
 }
 
-int sio_readlist_add(int sd, struct sockaddr_in *saddr) {
+int sio_readlist_add(struct sio_socket *socket, int sd, struct sockaddr_in *saddr) {
     struct sockreadlist *tmp;
 
     tmp = emalloc(sizeof(*tmp));
     tmp->sd = sd;
     if(saddr != NULL)
         memcpy(&tmp->saddrs, saddr, sizeof(tmp->saddrs));
-    list_add(&(tmp->list), &(_sockreadlist.list));
+    list_add(&(tmp->list), &(socket->_sockreadlist.list));
     printf("descriptor %d added\n", tmp->sd);
 
     return 0;
 }
 
-int sio_readlist_remove(int sd) {
+int sio_readlist_remove(struct sio_socket *socket, int sd) {
     struct sockreadlist *tmp;
-    struct list_head *prev, *q;
+    struct list_head *pos, *q;
 
-    list_for_each_safe(prev, q, &_sockreadlist.list) {
+    list_for_each_safe(pos, q, &socket->_sockreadlist.list) {
         tmp = list_entry(pos, struct sockreadlist, list);
         close(tmp->sd);
         list_del(pos);
-        efree(rtmp);
+        efree(tmp);
     }
    return 0;
 }
 
-int sio_writelist_add(int sd, const char *buffer) {
+int sio_writelist_add(struct sio_socket *socket, int sd, const char *buffer) {
     struct sockwritelist *tmp;
 
     tmp = emalloc(sizeof(*tmp));
@@ -145,15 +129,15 @@ int sio_writelist_add(int sd, const char *buffer) {
     tmp->data = emalloc(strlen(buffer) + 1);
     memset(tmp->data, '\0', strlen(buffer)+1);
     memcpy(tmp->data, buffer, strlen(buffer));
-    list_add(&(tmp->list), &(_sockwritelist.list));
+    list_add(&(tmp->list), &(socket->_sockwritelist.list));
     printf("message for %d added to write list\n", tmp->sd);
     printf("\t%s", (char*)tmp->data);
 
     return 0;
 }
 
-int sio_poll() {
-    int i, rlen;
+int sio_poll(struct sio_socket *socket) {
+    int rlen;
     fd_set read_list, write_list;
     struct list_head *pos, *q;
     struct sockreadlist *rtmp;
@@ -169,14 +153,14 @@ int sio_poll() {
 
     printf("polling IO, read-list: ");
     /* Add entries from list to the bit field. */
-    list_for_each(pos, &_sockreadlist.list) {
+    list_for_each(pos, &socket->_sockreadlist.list) {
         rtmp = list_entry(pos, struct sockreadlist, list);
         FD_SET(rtmp->sd, &read_list);
         printf("%d ", rtmp->sd);
     }
     printf(", write-list: ");
      /* Add messages from write list to the bitfield. */
-    list_for_each(pos, &_sockwritelist.list) {
+    list_for_each(pos, &socket->_sockwritelist.list) {
         wtmp = list_entry(pos, struct sockwritelist, list);
         FD_SET(wtmp->sd, &write_list);
         printf("%d ", wtmp->sd);
@@ -187,27 +171,27 @@ int sio_poll() {
     select(FD_SETSIZE, &read_list, &write_list, NULL, NULL);
     
     /* Step thru the read list and see if their bitfield is marked. */
-    list_for_each_safe(pos, q, &_sockreadlist.list) {
+    list_for_each_safe(pos, q, &socket->_sockreadlist.list) {
         rtmp = list_entry(pos, struct sockreadlist, list);
         /* The server socket. */
-        if(rtmp->sd == _server_sock && FD_ISSET(rtmp->sd, &read_list)) {
-            int csock = accept(_server_sock, (struct sockaddr*)&cinfo, &cinfolen);
-            _newconfp(csock);
-            sio_readlist_add(csock, &cinfo);
+        if(rtmp->sd == socket->_server_sock && FD_ISSET(rtmp->sd, &read_list)) {
+            int csock = accept(socket->_server_sock, (struct sockaddr*)&cinfo, &cinfolen);
+            socket->_newconfp(csock);
+            sio_readlist_add(socket, csock, &cinfo);
         }
         /* Clients in the read table. */
         else if(FD_ISSET(rtmp->sd, &read_list)) {
             /* Buffer data and fire an event function call. */
             if((rlen = recv(rtmp->sd, readbuff, BUFSIZE-1, 0)) != 0) {
                 readbuff[rlen+1] = '\0';
-                _readfp(rtmp->sd, readbuff);
+                socket->_readfp(rtmp->sd, readbuff);
             }
             /* Discon */
             else {
                 /* Free read buffer, close socket, send discon event
                  * remove the descriptor from linked list. */
                 close(rtmp->sd);
-                _disconfp(rtmp->sd);
+                socket->_disconfp(rtmp->sd);
                 list_del(pos);
                 efree(rtmp);
             }
@@ -215,7 +199,7 @@ int sio_poll() {
     }
 
    /* Same for write list. */
-   list_for_each_safe(pos, q, &_sockwritelist.list) {
+   list_for_each_safe(pos, q, &socket->_sockwritelist.list) {
         wtmp = list_entry(pos, struct sockwritelist, list);
         if(FD_ISSET(wtmp->sd, &write_list)) {
             /* Send off the message and remove it from the list. */

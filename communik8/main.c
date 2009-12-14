@@ -16,6 +16,8 @@ struct people_list {
     struct list_head list;
 } peoples;
 
+struct sio_socket *sock;
+
 void handle_connection(int sd) {
     struct people_list *tmp;
     struct list_head *pos;
@@ -34,7 +36,7 @@ void handle_connection(int sd) {
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
         snprintf(pbuff, BUFSIZE, "new con from %d\n", sd);
-        sio_writelist_add(tmp->sd, pbuff);
+        sio_writelist_add(sock, tmp->sd, pbuff);
     }
     cont++;
 }
@@ -50,7 +52,7 @@ void handle_read(int sd, char *buffer) {
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
         snprintf(pbuff, BUFSIZE, "%d said: %s", sd, buffer);
-        sio_writelist_add(tmp->sd, pbuff);
+        sio_writelist_add(sock, tmp->sd, pbuff);
     }
 }
 
@@ -74,22 +76,22 @@ void handle_discon(int sd) {
     list_for_each(pos, &peoples.list) {
         tmp = list_entry(pos, struct people_list, list);
         snprintf(pbuff, BUFSIZE, "discon from %d\n", sd);
-        sio_writelist_add(tmp->sd, pbuff);
+        sio_writelist_add(sock, tmp->sd, pbuff);
     }
     cont--;
 }
 
 int main(int argc, char *argv[]) {
-    if(sio_setup(handle_connection, handle_read, handle_discon) == -1)
+    if((sock = sio_setup(3141, handle_connection, handle_read, handle_discon)) == NULL)
         exit(1);
     
     INIT_LIST_HEAD(&peoples.list);
     
     do {
-        sio_poll();
+        sio_poll(sock);
     } while(cont > 0);
     
-    sio_close();
+    sio_close(sock);
     printf("exiting\n");
     return 0;
 }
