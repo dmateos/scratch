@@ -22,6 +22,9 @@ int main(int argc, char **argv) {
     check_config(&config);
 
     establish_connection(&config, &connection);
+    send_user(&connection);
+    send_nick(&connection);
+    send_join(&connection, config.cmdchan);
     event_loop(&connection, irc_parser);
 
     close_connection(&connection);

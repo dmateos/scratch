@@ -8,7 +8,6 @@
 #include <string.h>
 #include "networking.h"
 #include "conf.h"
-#include "irc.h"
 
 int establish_connection(CONFIG_T *config, CONNECTION_T *connection) {
     struct sockaddr_in pin;
@@ -44,30 +43,33 @@ void close_connection(CONNECTION_T *connection) {
 }
 
 int send_string(CONNECTION_T *connection, char *message) {
-    int sent;
-    sent = send(connection->socketdesc, message, strlen(message), 0);
+    int sent = send(connection->socketdesc, message, strlen(message), 0);
     connection->sendcount += sent;
     return sent;
 }
 
 struct readstate_s { 
+    /* Double the sizeof the backbuffer for worst case backbuffer is full
+     * and we have a full nessage too. */
     char message[DEFBUFFSIZE*2];
     char backbuffer[DEFBUFFSIZE];
     char backbufferisdirty;
 };
+
+#define DELIM "\r\n"
 
 /*
  * Reads a line from the buffer and keeps state of residual data left
  * after the line for next read if required. 
 */
 static void *read_line(char *buffer, struct readstate_s *state) {
-    char *newend = strstr(buffer, "\r\n");
+    char *newend;
     char *message = state->message;
+    memset(message, '\0', DEFBUFFSIZE*2);
 
     /* Buffer is empty, wasteing our time. */
     if(*buffer == '\0')
         return NULL; 
-    memset(message, '\0', DEFBUFFSIZE);
 
     /* If some data is in the backbuffer, add it to the message beginning. */
     if(state->backbufferisdirty) {
@@ -78,42 +80,40 @@ static void *read_line(char *buffer, struct readstate_s *state) {
         memset(state->backbuffer, '\0', sizeof state->backbuffer);
     }
 
-    /* Crap no end, better backbuffer it. */
-    if(newend == NULL) {
+    /* Find the end of our message. if we cant we have incomplete message so 
+     * add it to the backbuffer for next time (our friend above). */
+    if(!(newend = strstr(buffer, DELIM))) {
         fprintf(stderr, "filling backbuffer (%s)\n", buffer);
         memcpy(state->backbuffer, buffer, strlen(buffer));        
         state->backbufferisdirty = 1;
         return NULL;
     }
 
-    /* Terminate and copy. */
+    /* WOW all is good, Terminate the end and copy. */
     *newend = '\0';
     memcpy(message, buffer, strlen(buffer));
-    return newend+2;
+
+    /* Return the next string + len of delim for the \r\n */
+    return newend+strlen(DELIM);
 }
 
 void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*)) {
-    char recbuffer[DEFBUFFSIZE];
+    char recbuffer[DEFBUFFSIZE], *buffptr;
     int count = 0;
-    char *mptr;
     struct readstate_s readstate;
 
     memset(&readstate, '\0', sizeof readstate);
 
-    send_user(connection);
-    send_nick(connection);
-    send_join(connection, connection->config->cmdchan);
-
-    /* Grab some IRC data. */
+    /* Grab some data. */
     do {
         memset(recbuffer, '\0', DEFBUFFSIZE);
         count = recv(connection->socketdesc, recbuffer, DEFBUFFSIZE-1, 0);
         connection->reccount += count;
-        mptr = recbuffer;
+        buffptr = recbuffer;
 
         /* Parse all the data we can line by line then read some moar. */
         fprintf(stderr, "----recv block %d/%d-----\n", count, DEFBUFFSIZE);
-        while((mptr = read_line(mptr, &readstate))) {
+        while((buffptr = read_line(buffptr, &readstate))) {
             fprintf(stderr, "line: %s\n", readstate.message);
             eventptr(connection, readstate.message);
         }

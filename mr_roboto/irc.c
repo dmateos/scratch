@@ -41,6 +41,13 @@ void send_quit(CONNECTION_T *connection, char *arg) {
     send_string(connection, cmdstr);
 }
 
+void send_mesg(CONNECTION_T *connection, char *to, char *arg) {
+    char cmdstr[DEFBUFFSIZE];
+    memset(cmdstr, '\0', sizeof cmdstr);
+    snprintf(cmdstr, DEFBUFFSIZE, "PRIVMSG %s :%s", to, arg);
+    send_string(connection, cmdstr);
+}
+
 void handle_ping(CONNECTION_T *connection, char *arg) {
     char *cmdstr = calloc(DEFBUFFSIZE, sizeof(char));
     char *origcmdstr = cmdstr;
@@ -48,9 +55,9 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
 
     strncpy(cmdstr, arg, strlen(arg));
     strsep(&cmdstr, " ");
-    snprintf(finalstr, DEFBUFFSIZE, "PONG %s\r\n", cmdstr+1);
-    fprintf(stderr, "PONG %s\n", cmdstr);
-    send_string(connection, cmdstr);
+    snprintf(finalstr, DEFBUFFSIZE, "PONG %s\r\n", cmdstr);
+    fprintf(stderr, "%s", finalstr);
+    send_string(connection, finalstr);
 
     cmdstr = origcmdstr;
     free(cmdstr);

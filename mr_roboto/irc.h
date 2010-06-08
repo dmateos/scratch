@@ -8,5 +8,6 @@ void send_nick(CONNECTION_T *connection);
 void send_join(CONNECTION_T *connection, char *arg);
 void send_part(CONNECTION_T *connection, char *arg);
 void send_quit(CONNECTION_T *connection, char *arg);
+void send_mesg(CONNECTION_T *connection, char *to, char *arg);
 void irc_parser(CONNECTION_T *connection, char *msg);
 #endif
