@@ -4,19 +4,19 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "sockio.h"
 #include "list.h"
+#include "sockio.h"
+#include "util.h"
 
 #define BUFSIZE 1024
 
 int cont = 0;
+struct sio_socket *sock;
 
 struct people_list {
     int sd;
     struct list_head list;
 } peoples;
-
-struct sio_socket *sock;
 
 void handle_connection(int sd) {
     struct people_list *tmp;
@@ -27,7 +27,7 @@ void handle_connection(int sd) {
 
     /* Allocate a new person entry and put the socket
      * desc into it. */    
-    tmp = malloc(sizeof(*tmp));
+    tmp = emalloc(sizeof(*tmp));
     tmp->sd = sd;
     list_add(&(tmp->list), &(peoples.list));
 
@@ -68,7 +68,7 @@ void handle_discon(int sd) {
         tmp = list_entry(pos, struct people_list, list);
         if(tmp->sd == sd) {
             list_del(pos);
-            free(tmp);
+            efree(tmp);
         }
     }
 
@@ -82,7 +82,8 @@ void handle_discon(int sd) {
 }
 
 int main(int argc, char *argv[]) {
-    if((sock = sio_setup(3141, handle_connection, handle_read, handle_discon)) == NULL)
+    if((sock = sio_setup(3141, handle_connection, handle_read, 
+                               handle_discon)) == NULL)
         exit(1);
     
     INIT_LIST_HEAD(&peoples.list);

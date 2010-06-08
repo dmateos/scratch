@@ -8,10 +8,7 @@
 #ifndef _SOCKET_IO_H
 #define _SOCKET_IO_H
 
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <arpa/inet.h>
-
 #include "list.h"
 
 /* Function ptr types. */
@@ -22,15 +19,15 @@ typedef void(*sio_discon_fp)(int sd);
 struct sio_socket {
     /* Linked list for read list of sockets to poll. */
     struct sockreadlist {
-        int sd;
         struct list_head list;
+        int sd;
         struct sockaddr_in saddrs;
     } _sockreadlist;
 
     /* Linked list for write queue of messages to send to sockets. */
     struct sockwritelist {
-        int sd;
         struct list_head list;
+        int sd;
         void *data;
     } _sockwritelist;
 
@@ -45,7 +42,8 @@ struct sio_socket {
 };
 
 /* Setup the socket IO system with a non blocking listening socket. */
-struct sio_socket *sio_setup(int port, sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp);
+struct sio_socket *sio_setup(int port, sio_newcon_fp nfp, sio_read_fp rdfp, 
+                             sio_discon_fp dcfp);
 
 void sio_close(struct sio_socket *socket);
 

@@ -52,7 +52,8 @@ static int setup_socket(int port) {
     return lsock;
 }
 
-struct sio_socket *sio_setup(int port, sio_newcon_fp nfp, sio_read_fp rdfp, sio_discon_fp dcfp) {
+struct sio_socket *sio_setup(int port, sio_newcon_fp nfp, sio_read_fp rdfp, 
+                             sio_discon_fp dcfp) {
     struct sio_socket *socket;
 
     socket = emalloc(sizeof(*socket));
@@ -83,11 +84,13 @@ void sio_close(struct sio_socket *socket) {
     list_for_each_safe(pos, q, &socket->_sockreadlist.list) {
         rtmp = list_entry(pos, struct sockreadlist, list);
         close(rtmp->sd);
+        printf("killed left over read client %d\n", rtmp->sd);
         list_del(pos);
         efree(rtmp); 
     }
     list_for_each_safe(pos, q, &socket->_sockwritelist.list) {
         wtmp = list_entry(pos, struct sockwritelist, list);
+        printf("killed left over write entry %d\n", wtmp->sd);
         efree(wtmp->data);
         list_del(pos);
         efree(wtmp);
@@ -108,7 +111,7 @@ int sio_readlist_add(struct sio_socket *socket, int sd, struct sockaddr_in *sadd
     return 0;
 }
 
-int sio_readlist_remove(struct sio_socket *socket, int sd) {
+int sio_readlist_del(struct sio_socket *socket, int sd) {
     struct sockreadlist *tmp;
     struct list_head *pos, *q;
 
@@ -137,7 +140,7 @@ int sio_writelist_add(struct sio_socket *socket, int sd, const char *buffer) {
 }
 
 int sio_poll(struct sio_socket *socket) {
-    int rlen;
+    int rlen, csock;
     fd_set read_list, write_list;
     struct list_head *pos, *q;
     struct sockreadlist *rtmp;
@@ -175,7 +178,8 @@ int sio_poll(struct sio_socket *socket) {
         rtmp = list_entry(pos, struct sockreadlist, list);
         /* The server socket. */
         if(rtmp->sd == socket->_server_sock && FD_ISSET(rtmp->sd, &read_list)) {
-            int csock = accept(socket->_server_sock, (struct sockaddr*)&cinfo, &cinfolen);
+            csock = accept(socket->_server_sock, (struct sockaddr*)&cinfo, 
+                           &cinfolen);
             socket->_newconfp(csock);
             sio_readlist_add(socket, csock, &cinfo);
         }
