@@ -3,6 +3,8 @@
 
 #include "conf.h"
 
+#define DEFBUFFSIZE 513
+
 typedef struct CONNECTION_S {
     CONFIG_T *config;
     int socketdesc;

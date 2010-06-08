@@ -50,25 +50,49 @@ int send_string(CONNECTION_T *connection, char *message) {
     return sent;
 }
 
-/*
-char *read_line(char **top, char *message, char **remnant) {
+struct readstate_s { 
+    char backbuffer[DEFBUFFSIZE];
+    char backbufferisdirty;
+    char message[DEFBUFFSIZE*2];
+};
+
+static void *read_line(char *buffer, struct readstate_s *state) {
+    if(*buffer == '\0')
+        return NULL; 
+
     char *newend = strstr(buffer, "\r\n");
-    char *backbuff;
-    if(newend == NULL) {
-        if(*newend != '\0') {
-            backbuff = calloc(strlen(buffer+1), sizeof(char));
-        }
-        return 0;
+    char *message = state->message;
+    memset(message, '\0', DEFBUFFSIZE);
+
+    if(state->backbufferisdirty) {
+        fprintf(stderr, "emptying backbuffer (%s)\n", state->backbuffer); 
+        memcpy(message, state->backbuffer, strlen(state->backbuffer));
+        message += strlen(state->backbuffer);
+        state->backbufferisdirty = 0;
+        memset(state->backbuffer, '\0', sizeof state->backbuffer);
     }
+
+    /* Crap no end. */
+    if(newend == NULL) {
+        fprintf(stderr, "filling backbuffer (%s)\n", buffer);
+        memcpy(state->backbuffer, buffer, strlen(buffer));        
+        state->backbufferisdirty = 1;
+        return NULL;
+    }
+
+    /* Terminate and copy. */
     *newend = '\0';
-    strncpy(message, buffer, 3071);
+    memcpy(message, buffer, strlen(buffer));
     return newend+2;
 }
-*/
+
 void event_loop(CONNECTION_T *connection) {
-    char buffer[3071+1];
-    char message[3071+1];
+    char recbuffer[DEFBUFFSIZE];
     int count = 0;
+    char *mptr;
+    struct readstate_s readstate;
+
+    memset(&readstate, '\0', sizeof readstate);
 
     send_user(connection);
     send_nick(connection);
@@ -76,19 +100,20 @@ void event_loop(CONNECTION_T *connection) {
 
     /* Grab some IRC data. */
     do {
-        memset(buffer, '\0', 3071+1);
-        memset(message, '\0', 3071+1);
-        count = recv(connection->socketdesc, buffer, 3071, 0);
+        memset(recbuffer, '\0', DEFBUFFSIZE);
+        count = recv(connection->socketdesc, recbuffer, DEFBUFFSIZE-1, 0);
         connection->reccount += count;
-        printf("%s\n", buffer);
-
-        if(strstr(buffer, "PING") == &buffer[0]) {
-            handle_ping(connection, buffer);
-        }
+        mptr = recbuffer;
 
         /* Parse all the data line by line. */
-        //while((mptr = read_line(buffer, message)) != NULL) {
-          //  printf("new line: %s\n", message);
-        //}
-    } while(count != 0 && count != -1);   
+        printf("----recv block %d/%d-----\n", count, DEFBUFFSIZE);
+        while((mptr = read_line(mptr, &readstate))) {
+            printf("line: %s\n", readstate.message);
+
+            if(strstr(readstate.message, "PING") != NULL)
+                handle_ping(connection, readstate.message);
+            else if (strstr(readstate.message, "plzplzquit") != NULL)
+                send_quit(connection, "l8r guys");
+        }
+    } while(count > 0);
 }
