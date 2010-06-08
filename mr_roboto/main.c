@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     check_config(&config);
 
     establish_connection(&config, &connection);
-    event_loop(&connection);
+    event_loop(&connection, irc_parser);
 
     close_connection(&connection);
     free_config(&config);

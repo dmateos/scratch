@@ -18,6 +18,9 @@ int load_config(char *path, CONFIG_T *config) {
         return -1;
     }
 
+    config->cfgname = calloc(strlen(path)+1, sizeof(char));
+    memcpy(config->cfgname, path, strlen(path));
+
     /* While not at end of file. */
     while(!feof(file)) {
         /* Read a line and tokenize it on space. */
@@ -72,10 +75,12 @@ void free_config(CONFIG_T *config) {
         free(config->realname);
     if(config->cmdchan != NULL)
         free(config->cmdchan);
+
+    free(config->cfgname);
 }
 
 void check_config(CONFIG_T *config) {
-    fprintf(stderr, "-----CONFIG------\n");
+    fprintf(stderr, "-----%s------\n", config->cfgname);
     fprintf(stderr, "server: %s\n", config->server);
     fprintf(stderr, "port: %d\n", config->port);
     fprintf(stderr, "name: %s\n", config->name);

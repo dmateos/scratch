@@ -37,7 +37,7 @@ void send_part(CONNECTION_T *connection, char *arg) {
 void send_quit(CONNECTION_T *connection, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
-    snprintf(cmdstr, DEFBUFFSIZE, "QUIT %s\r\n", arg);
+    snprintf(cmdstr, DEFBUFFSIZE, "QUIT :%s\r\n", arg);
     send_string(connection, cmdstr);
 }
 
@@ -50,7 +50,16 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
     strsep(&cmdstr, " ");
     snprintf(finalstr, DEFBUFFSIZE, "PONG %s\r\n", cmdstr+1);
     fprintf(stderr, "PONG %s\n", cmdstr);
+    send_string(connection, cmdstr);
 
     cmdstr = origcmdstr;
     free(cmdstr);
+}
+
+void irc_parser(CONNECTION_T *connection, char *msg) {
+    /* Just some tests .*/
+    if(strstr(msg, "PING") != NULL)
+        handle_ping(connection, msg);
+    else if (strstr(msg, "plzplzquit") != NULL)
+        send_quit(connection, "l8r guys");
 }

@@ -10,6 +10,7 @@ typedef struct CONFIG_S {
     char *realname;
     int port;
     char *cmdchan;
+    char *cfgname;
 } CONFIG_T;
 
 int load_config(char *path, CONFIG_T *config);

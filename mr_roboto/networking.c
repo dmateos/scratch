@@ -51,19 +51,25 @@ int send_string(CONNECTION_T *connection, char *message) {
 }
 
 struct readstate_s { 
+    char message[DEFBUFFSIZE*2];
     char backbuffer[DEFBUFFSIZE];
     char backbufferisdirty;
-    char message[DEFBUFFSIZE*2];
 };
 
+/*
+ * Reads a line from the buffer and keeps state of residual data left
+ * after the line for next read if required. 
+*/
 static void *read_line(char *buffer, struct readstate_s *state) {
-    if(*buffer == '\0')
-        return NULL; 
-
     char *newend = strstr(buffer, "\r\n");
     char *message = state->message;
+
+    /* Buffer is empty, wasteing our time. */
+    if(*buffer == '\0')
+        return NULL; 
     memset(message, '\0', DEFBUFFSIZE);
 
+    /* If some data is in the backbuffer, add it to the message beginning. */
     if(state->backbufferisdirty) {
         fprintf(stderr, "emptying backbuffer (%s)\n", state->backbuffer); 
         memcpy(message, state->backbuffer, strlen(state->backbuffer));
@@ -72,7 +78,7 @@ static void *read_line(char *buffer, struct readstate_s *state) {
         memset(state->backbuffer, '\0', sizeof state->backbuffer);
     }
 
-    /* Crap no end. */
+    /* Crap no end, better backbuffer it. */
     if(newend == NULL) {
         fprintf(stderr, "filling backbuffer (%s)\n", buffer);
         memcpy(state->backbuffer, buffer, strlen(buffer));        
@@ -86,7 +92,7 @@ static void *read_line(char *buffer, struct readstate_s *state) {
     return newend+2;
 }
 
-void event_loop(CONNECTION_T *connection) {
+void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*)) {
     char recbuffer[DEFBUFFSIZE];
     int count = 0;
     char *mptr;
@@ -105,15 +111,11 @@ void event_loop(CONNECTION_T *connection) {
         connection->reccount += count;
         mptr = recbuffer;
 
-        /* Parse all the data line by line. */
-        printf("----recv block %d/%d-----\n", count, DEFBUFFSIZE);
+        /* Parse all the data we can line by line then read some moar. */
+        fprintf(stderr, "----recv block %d/%d-----\n", count, DEFBUFFSIZE);
         while((mptr = read_line(mptr, &readstate))) {
-            printf("line: %s\n", readstate.message);
-
-            if(strstr(readstate.message, "PING") != NULL)
-                handle_ping(connection, readstate.message);
-            else if (strstr(readstate.message, "plzplzquit") != NULL)
-                send_quit(connection, "l8r guys");
+            fprintf(stderr, "line: %s\n", readstate.message);
+            eventptr(connection, readstate.message);
         }
     } while(count > 0);
 }

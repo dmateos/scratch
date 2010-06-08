@@ -3,7 +3,7 @@
 
 #include "conf.h"
 
-#define DEFBUFFSIZE 513
+#define DEFBUFFSIZE 4096
 
 typedef struct CONNECTION_S {
     CONFIG_T *config;
@@ -14,6 +14,6 @@ typedef struct CONNECTION_S {
 int establish_connection(CONFIG_T *config, CONNECTION_T *connection);
 void close_connection(CONNECTION_T *connection);
 int send_string(CONNECTION_T *connection, char *msg);
-void event_loop(CONNECTION_T *connection);
+void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*));
 void handle_ping(CONNECTION_T *connection, char *arg);
 #endif
