@@ -63,6 +63,14 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
     free(cmdstr);
 }
 
+void handle_privmsg(CONNECTION_T *connection, IRCDATA_T *data) {
+
+}
+
+void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
+
+}
+
 void irc_parser(CONNECTION_T *connection, char *msg) {
     char *strptr;
     char *backupmsg;
@@ -102,10 +110,14 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
     data.params = calloc(strlen(strptr)+1, sizeof(char));
     strncpy(data.params, strptr, strlen(strptr));
 
+    /* First level of data parsed, call subparser depending on the command. */
     fprintf(stderr, "prefix: %s, cmd: %s\nparams: %s\n\n", data.prefix, data.command, data.params);
-    free(backupmsg);
+    if(strcmp(data.command, "PRIVMSG"))
+        handle_privmsg(connection, &data);
+    else if(strcmp(data.command, "NOTICE"))
+        handle_notice(connection, &data);
 
-    /* temp to test valgrind. */
+    free(backupmsg);
     free(data.prefix);
     free(data.command);
     free(data.params);

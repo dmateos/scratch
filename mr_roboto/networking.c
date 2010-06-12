@@ -120,8 +120,11 @@ void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*))
         fprintf(stderr, "----recv block %d/%d-----\n", count, DEFBUFFSIZE);
 #endif
         while((buffptr = read_line(buffptr, &readstate))) {
-            if(strstr(readstate.message, "plzquit"))
+            if(strstr(readstate.message, "plzquit")) {
+                send_quit(connection, "l8r guys");
+                count = 0;
                 return;
+            }
 #ifdef NET_DEBUG
             fprintf(stderr, "line: %s\n", readstate.message);
 #endif
