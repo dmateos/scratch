@@ -1,5 +1,5 @@
 all: networking.o main.o irc.o conf.o
-	cc -Wall networking.o main.o irc.o conf.o -o mrroboto -L/usr/local/lib -Wall
+	cc -Wall networking.o main.o irc.o conf.o -o mrroboto -L/usr/local/lib
 strip: all
 	strip *.o mrroboto
 networking.o: networking.c

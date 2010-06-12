@@ -56,7 +56,7 @@ struct readstate_s {
     char backbufferisdirty;
 };
 
-#define DELIM "\r\n"
+#define TERM "\r\n"
 
 /*
  * Reads a line from the buffer and keeps state of residual data left
@@ -69,11 +69,13 @@ static void *read_line(char *buffer, struct readstate_s *state) {
 
     /* Buffer is empty, wasteing our time. */
     if(*buffer == '\0')
-        return NULL; 
+            return NULL; 
 
     /* If some data is in the backbuffer, add it to the message beginning. */
     if(state->backbufferisdirty) {
+#ifdef NET_DEBUG
         fprintf(stderr, "emptying backbuffer (%s)\n", state->backbuffer); 
+#endif
         memcpy(message, state->backbuffer, strlen(state->backbuffer));
         message += strlen(state->backbuffer);
         state->backbufferisdirty = 0;
@@ -82,8 +84,10 @@ static void *read_line(char *buffer, struct readstate_s *state) {
 
     /* Find the end of our message. if we cant we have incomplete message so 
      * add it to the backbuffer for next time (our friend above). */
-    if(!(newend = strstr(buffer, DELIM))) {
+    if(!(newend = strstr(buffer, TERM))) {
+#ifdef NETDEBUG
         fprintf(stderr, "filling backbuffer (%s)\n", buffer);
+#endif
         memcpy(state->backbuffer, buffer, strlen(buffer));        
         state->backbufferisdirty = 1;
         return NULL;
@@ -94,7 +98,7 @@ static void *read_line(char *buffer, struct readstate_s *state) {
     memcpy(message, buffer, strlen(buffer));
 
     /* Return the next string + len of delim for the \r\n */
-    return newend+strlen(DELIM);
+    return newend+strlen(TERM);
 }
 
 void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*)) {
@@ -112,9 +116,15 @@ void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*))
         buffptr = recbuffer;
 
         /* Parse all the data we can line by line then read some moar. */
+#ifdef NET_DEBUG
         fprintf(stderr, "----recv block %d/%d-----\n", count, DEFBUFFSIZE);
+#endif
         while((buffptr = read_line(buffptr, &readstate))) {
+            if(strstr(readstate.message, "plzquit"))
+                return;
+#ifdef NET_DEBUG
             fprintf(stderr, "line: %s\n", readstate.message);
+#endif
             eventptr(connection, readstate.message);
         }
     } while(count > 0);

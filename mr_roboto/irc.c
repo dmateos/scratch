@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "networking.h"
+#include "irc.h"
 
 void send_user(CONNECTION_T *connection) {
     char cmdstr[DEFBUFFSIZE];
@@ -56,7 +57,6 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
     strncpy(cmdstr, arg, strlen(arg));
     strsep(&cmdstr, " ");
     snprintf(finalstr, DEFBUFFSIZE, "PONG %s\r\n", cmdstr);
-    fprintf(stderr, "%s", finalstr);
     send_string(connection, finalstr);
 
     cmdstr = origcmdstr;
@@ -64,9 +64,49 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
 }
 
 void irc_parser(CONNECTION_T *connection, char *msg) {
-    /* Just some tests .*/
-    if(strstr(msg, "PING") != NULL)
+    char *strptr;
+    char *backupmsg;
+    IRCDATA_T data;
+
+    /* Ping, easy. */
+    if(strstr(msg, "PING :") != NULL) {
         handle_ping(connection, msg);
-    else if (strstr(msg, "plzplzquit") != NULL)
-        send_quit(connection, "l8r guys");
+        return;
+    }
+
+    /* Get the first token, this fucks our msg so make a backup. */
+    backupmsg = calloc(strlen(msg)+1, sizeof(char));
+    strncpy(backupmsg, msg, strlen(msg));
+
+    if(!(strptr = strtok(msg, " "))) {
+        fprintf(stderr, "parse error prefix\n");
+        return; /* oh shit. */
+    }
+
+     /* Is a prefix if the first char is :. */
+    if(strptr[0] == ':') {
+        data.prefix = calloc(strlen(strptr)+1, sizeof(char));
+        strncpy(data.prefix, strptr, strlen(strptr));
+    }
+
+    /* Grab the next token which should be the command. */
+    if(!(strptr = strtok(NULL, " "))) {
+        fprintf(stderr, "parse error command\n");
+        return; /* more oh shit. */
+    }
+    data.command = calloc(strlen(strptr)+1, sizeof(char));
+    strncpy(data.command, strptr, strlen(strptr));
+
+    /* Seek to the params in our backup msg using the command as reference. */
+    strptr = strstr(backupmsg, data.command)+strlen(data.command)+1;
+    data.params = calloc(strlen(strptr)+1, sizeof(char));
+    strncpy(data.params, strptr, strlen(strptr));
+
+    fprintf(stderr, "prefix: %s, cmd: %s\nparams: %s\n\n", data.prefix, data.command, data.params);
+    free(backupmsg);
+
+    /* temp to test valgrind. */
+    free(data.prefix);
+    free(data.command);
+    free(data.params);
 }
