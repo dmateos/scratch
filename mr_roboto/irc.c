@@ -64,7 +64,7 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
 }
 
 void handle_privmsg(CONNECTION_T *connection, IRCDATA_T *data) {
-
+    
 }
 
 void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
@@ -72,8 +72,7 @@ void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
 }
 
 void irc_parser(CONNECTION_T *connection, char *msg) {
-    char *strptr;
-    char *backupmsg;
+    char *strptr, *backupmsg;
     IRCDATA_T data;
 
     /* Ping, easy. */
@@ -82,10 +81,10 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
         return;
     }
 
-    /* Get the first token, this fucks our msg so make a backup. */
+    /* MSG: :prefix!prefixend command :params 
+       Get the first token, this fucks our msg so make a backup. */
     backupmsg = calloc(strlen(msg)+1, sizeof(char));
     strncpy(backupmsg, msg, strlen(msg));
-
     if(!(strptr = strtok(msg, " "))) {
         fprintf(stderr, "parse error prefix\n");
         return; /* oh shit. */
@@ -93,6 +92,7 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
 
      /* Is a prefix if the first char is :. */
     if(strptr[0] == ':') {
+        strptr++;
         data.prefix = calloc(strlen(strptr)+1, sizeof(char));
         strncpy(data.prefix, strptr, strlen(strptr));
     }
@@ -106,15 +106,18 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
     strncpy(data.command, strptr, strlen(strptr));
 
     /* Seek to the params in our backup msg using the command as reference. */
-    strptr = strstr(backupmsg, data.command)+strlen(data.command)+1;
+    if(!(strptr = strstr(backupmsg, data.command)+strlen(data.command)+1)) {
+        fprintf(stderr, "parse error params\n");
+        return;
+    }
     data.params = calloc(strlen(strptr)+1, sizeof(char));
     strncpy(data.params, strptr, strlen(strptr));
 
     /* First level of data parsed, call subparser depending on the command. */
-    fprintf(stderr, "prefix: %s, cmd: %s\nparams: %s\n\n", data.prefix, data.command, data.params);
-    if(strcmp(data.command, "PRIVMSG"))
+    fprintf(stderr, "prfx(%s), cmd(%s) %s\n", data.prefix, data.command, data.params);
+    if(!strcmp(data.command, "PRIVMSG"))
         handle_privmsg(connection, &data);
-    else if(strcmp(data.command, "NOTICE"))
+    else if(!strcmp(data.command, "NOTICE"))
         handle_notice(connection, &data);
 
     free(backupmsg);

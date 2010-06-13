@@ -101,6 +101,7 @@ static void *read_line(char *buffer, struct readstate_s *state) {
     return newend+strlen(TERM);
 }
 
+/* TODO: msg max so we can get insta responses for inapp calls? */
 void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*)) {
     char recbuffer[DEFBUFFSIZE], *buffptr;
     int count = 0;
@@ -128,6 +129,7 @@ void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*))
 #ifdef NET_DEBUG
             fprintf(stderr, "line: %s\n", readstate.message);
 #endif
+            /* We can prob assume this event will destroy our message parseing it. */
             eventptr(connection, readstate.message);
         }
     } while(count > 0);

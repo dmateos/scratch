@@ -1,3 +1,6 @@
+/* 
+ * Parses Lines of the IRC protocol and does .. <abstraction level?>/interface *
+ */
 #ifndef _IRC_H_
 #define _IRC_H_
 
