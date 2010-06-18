@@ -56,6 +56,7 @@ void send_mesg(CONNECTION_T *connection, char *to, char *arg) {
     send_string(connection, cmdstr);
 }
 
+/* Handler functions, parse commands broken up by the main parser. */
 void handle_ping(CONNECTION_T *connection, char *arg) {
     char *cmdstr = calloc(DEFBUFFSIZE, sizeof(char));
     char *origcmdstr = cmdstr;
@@ -78,6 +79,7 @@ static void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
 
 }
 
+/* Handles numeric based commands, all in one as theres a shit ton. */
 static void handle_numeric(CONNECTION_T *connection, IRCDATA_T *data) {
     int cmd = atoi(data->command);
 
