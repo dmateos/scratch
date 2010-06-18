@@ -8,6 +8,12 @@
 
 /* IRC RFC CMD CODES, not all of them just the ones that look important and added
    as needed. */
+#define RPL_NAMEREPLY 353
+#define RPL_ENDOFNAMES 366
+#define RPL_MOTD 372
+#define RPL_MOTDSTART 375
+#define RPL_ENDOFMOTD 376
+
 #define ERR_NOSUCHNICK 401
 #define ERR_CANNOTSENDTOCHAN 404
 #define ERR_UNKNOWNCOMMAND 421
@@ -31,9 +37,6 @@ void send_join(CONNECTION_T *connection, char *arg);
 void send_part(CONNECTION_T *connection, char *arg);
 void send_quit(CONNECTION_T *connection, char *arg);
 void send_mesg(CONNECTION_T *connection, char *to, char *arg);
-
-void handle_ping(CONNECTION_T *connection, char *arg);
-void hamdle_privmsg(CONNECTION_T *connection, IRCDATA_T *data);
 
 void irc_parser(CONNECTION_T *connection, char *msg);
 #endif

@@ -70,12 +70,41 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
     free(cmdstr);
 }
 
-void handle_privmsg(CONNECTION_T *connection, IRCDATA_T *data) {
+static void handle_privmsg(CONNECTION_T *connection, IRCDATA_T *data) {
     
 }
 
-void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
+static void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
 
+}
+
+static void handle_numeric(CONNECTION_T *connection, IRCDATA_T *data) {
+    int cmd = atoi(data->command);
+
+    switch(cmd) {
+        case RPL_NAMEREPLY:
+        case RPL_ENDOFNAMES:
+        case RPL_MOTD:
+        case RPL_MOTDSTART:
+        case RPL_ENDOFMOTD:
+            break;
+        case ERR_NOSUCHNICK:
+        case ERR_CANNOTSENDTOCHAN:
+        case ERR_UNKNOWNCOMMAND:
+        case ERR_NOMOTD:
+        case ERR_NONICKNAMEGIVEN:
+            break;
+        case ERR_NICKNAMEINUSE:
+            fprintf(stderr, "nickname in use\n");
+            send_altnick(connection);
+            break;
+        case ERR_NOTONCHANNEL:
+        case ERR_NOTREGISTERED:
+        case ERR_NEEDMOREPARAMS:
+            break;
+        default:
+            break;
+    }
 }
 
 void irc_parser(CONNECTION_T *connection, char *msg) {
@@ -126,22 +155,9 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
     else if(!strcmp(data.command, "NOTICE"))
         handle_notice(connection, &data);
     /* If its a digit we have a numeric command. */
-    else if(isdigit(data.command[0])) {
-        int cmd = atoi(data.command);
+    else if(isdigit(data.command[0]))
+        handle_numeric(connection, &data);
 
-        switch(cmd) {
-            /* Temp hard coded to test. */
-            case 422:
-                fprintf(stderr, "MOTD file missing\n");
-                break;
-            case 433:
-                fprintf(stderr, "nickname in use\n");
-                send_altnick(connection);
-                break;
-            default:
-                break;
-        }
-    }
     free(backupmsg);
     free(data.prefix);
     free(data.command);
