@@ -1,7 +1,11 @@
 #ifndef _CHUNKIFY_H_
 #define _CHUNKIFY_H_
 
-#define CHUNKSIZE 1024
+#define KB(x) (x*1024)
+#define MB(x) (x*1024*1024)
+#define GB(x) (x*1024*1024*1024)
+
+#define CHUNKSIZE MB(1)
 
 typedef struct CHUNK_S {
     unsigned int hash; 

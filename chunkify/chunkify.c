@@ -46,16 +46,21 @@ void *chunkify(const char *path, int *ccount) {
     void *dbuffer, *dptr;;
     chunk_t *chunks;
 
+    /* Read the file, allocate some chunks. */
     dbuffer = loadfile(path, &dsize);
     chunkcount = dsize/CHUNKSIZE;
-    chunks = malloc((sizeof *chunks)*chunkcount); /* i think.. */
+    if(!(chunks = malloc((sizeof *chunks)*chunkcount))) { /* i think.. */
+        fprintf(stderr, "chunk alloc error\n");
+    }
     dptr = dbuffer;
     fprintf(stdout, "allocated %d chunks capable of storing %d each\n", chunkcount, CHUNKSIZE);
 
+    /* Put the file contents into the indovidual chunks. */
     for(i = 0; i < chunkcount; i++) {
         memcpy(chunks[i].data, dptr, CHUNKSIZE);
         dptr += CHUNKSIZE;
         chunks[i].id = i;
+
         fprintf(stdout, "[%d] ", chunks[i].id);
         if(!(i % 10) && i != 0)
             fprintf(stdout, "\n");
