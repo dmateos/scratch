@@ -21,6 +21,13 @@ void send_nick(CONNECTION_T *connection) {
     send_string(connection, cmdstr);
 }
 
+void send_altnick(CONNECTION_T *connection) {
+    char cmdstr[DEFBUFFSIZE];
+    memset(cmdstr, '\0', sizeof cmdstr);
+    snprintf(cmdstr, DEFBUFFSIZE, "NICK %s\r\n", connection->config->altname);
+    send_string(connection, cmdstr);
+}
+
 void send_join(CONNECTION_T *connection, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
@@ -89,7 +96,6 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
         fprintf(stderr, "parse error prefix\n");
         return; /* oh shit. */
     }
-
      /* Is a prefix if the first char is :. */
     if(strptr[0] == ':') {
         strptr++;
@@ -119,7 +125,23 @@ void irc_parser(CONNECTION_T *connection, char *msg) {
         handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
         handle_notice(connection, &data);
+    /* If its a digit we have a numeric command. */
+    else if(isdigit(data.command[0])) {
+        int cmd = atoi(data.command);
 
+        switch(cmd) {
+            /* Temp hard coded to test. */
+            case 422:
+                fprintf(stderr, "MOTD file missing\n");
+                break;
+            case 433:
+                fprintf(stderr, "nickname in use\n");
+                send_altnick(connection);
+                break;
+            default:
+                break;
+        }
+    }
     free(backupmsg);
     free(data.prefix);
     free(data.command);
