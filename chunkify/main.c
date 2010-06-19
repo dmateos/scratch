@@ -4,10 +4,30 @@
 #include <string.h>
 
 #include "chunkify.h"
+#include "networking.h"
+
+void server(const char *filepath) {
+    chunk_t *data;
+    int serversock, clientsock, chunkc;
+    char hellomsg[1024];
+
+    /* Chunkify the data and prep a hello message. */
+    printf("%s\n", filepath);
+    data = chunkify(filepath, &chunkc);
+    snprintf(hellomsg, 1024, "hello:%d %d\n", chunkc, CHUNKSIZE);
+
+    /* Accept a client. */
+    serversock = socket_listen();
+    clientsock = socket_accept(serversock);
+    send(clientsock, hellomsg, strlen(hellomsg), 0);
+    
+    /* Clean up. */
+    close(serversock); 
+    free(data);
+}
 
 int main(int argc, char **argv) {
-    chunk_t *data;
-    int chunkc, opt, isserver, isclient;
+    int opt, isserver, isclient;
     char filepath[1024];
 
     memset(filepath, '\0', sizeof filepath);
@@ -34,14 +54,11 @@ int main(int argc, char **argv) {
         }
     }
 
-
     /* Chunkasize if were the server and path is set. */
     if(isserver && (filepath[0] != '\0')) {
-        printf("%s\n", filepath);
-        data = chunkify(filepath, &chunkc);
-        free(data);
+        server(filepath);
     }
-    /* Were a client. */
+            /* Were a client. */
     else if(isclient && (filepath[0] != '\0')) {
 
     }
