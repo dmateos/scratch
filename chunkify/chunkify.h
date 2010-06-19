@@ -14,5 +14,6 @@ typedef struct CHUNK_S {
 } chunk_t; 
 
 void *chunkify(const char*, int*);
+void dechunkify(const char*, void*);
 
 #endif

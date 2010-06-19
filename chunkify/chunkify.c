@@ -48,7 +48,7 @@ void *chunkify(const char *path, int *ccount) {
 
     /* Read the file, allocate some chunks. */
     dbuffer = loadfile(path, &dsize);
-    chunkcount = (dsize/CHUNKSIZE);
+    chunkcount = (dsize/CHUNKSIZE)+1;
     if(!(chunks = malloc((sizeof *chunks)*chunkcount))) { /* TODO: nope.. */
         fprintf(stderr, "chunk alloc error\n");
     }
@@ -75,4 +75,8 @@ void *chunkify(const char *path, int *ccount) {
     free(dbuffer);
     *ccount = chunkcount;
     return chunks;
+}
+
+void dechunkify(const char *path, void *data) {
+
 }
