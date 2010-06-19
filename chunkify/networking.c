@@ -18,13 +18,16 @@ int socket_listen() {
     pin.sin_port = htons(13373);
 
     if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        return -1;
+        fprintf(stderr, "socket error\n");
+        exit(1);
     }
     if(bind(sd, (struct sockaddr*)&pin, sizeof pin) == -1) {
-        return -1;
+        fprintf(stderr, "bind error\n");
+        exit(1);
     }
     if(listen(sd, 1024) == -1) {
-        return -1;
+        fprintf(stderr, "listen error\n");
+        exit(1);
     }
     return sd;
 }
@@ -33,8 +36,11 @@ int socket_accept(int sd) {
     struct sockaddr_in cdetails;
     int cd, csize;
 
+    memset(&cdetails, '\0', sizeof cdetails);
+    csize = 0;
+
     if((cd = accept(sd, (struct sockaddr*)&cdetails, &csize)) == -1) {
-        return -1;
+        exit(1);
     }
 
     return cd;

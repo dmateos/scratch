@@ -18,11 +18,13 @@ void server(const char *filepath) {
 
     /* Accept a client. */
     serversock = socket_listen();
-    clientsock = socket_accept(serversock);
-    send(clientsock, hellomsg, strlen(hellomsg), 0);
-    
+
+    while(1) {
+        clientsock = socket_accept(serversock);
+        send(clientsock, hellomsg, strlen(hellomsg), 0);
+        close(clientsock); 
+    }    
     /* Clean up. */
-    close(serversock); 
     free(data);
 }
 
