@@ -70,7 +70,7 @@ void *chunkify(const char *path, int *ccount) {
         if(!(i % 10) && i != 0)
             fprintf(stdout, "\n");
     }
-    fprintf(stdout, "filled \n");
+    fprintf(stdout, "\n");
 
     free(dbuffer);
     *ccount = chunkcount;

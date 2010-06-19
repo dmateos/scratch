@@ -3,5 +3,6 @@
 
 int socket_listen();
 int socket_accept(int sd);
+int socket_connect(const char *hostname);
 
 #endif

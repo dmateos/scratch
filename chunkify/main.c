@@ -6,7 +6,7 @@
 #include "chunkify.h"
 #include "networking.h"
 
-void server(const char *filepath) {
+static void server(const char *filepath) {
     chunk_t *data;
     int serversock, clientsock, chunkc, request;
     char hellomsg[1024], recbuff[1024];
@@ -14,9 +14,8 @@ void server(const char *filepath) {
     /* Chunkify the data and prep a hello message. */
     printf("%s\n", filepath);
     data = chunkify(filepath, &chunkc);
-    snprintf(hellomsg, 1024, "hello:%d %d\n", chunkc, CHUNKSIZE);
-    memset(recbuff, '\0', sizeof recbuff);
     memset(hellomsg, '\0', sizeof hellomsg);
+    snprintf(hellomsg, 1024, "chunkify %d,%d\n", chunkc, CHUNKSIZE);
 
     /* Accept a client. */
     serversock = socket_listen();
@@ -25,27 +24,40 @@ void server(const char *filepath) {
         clientsock = socket_accept(serversock);
         send(clientsock, hellomsg, strlen(hellomsg), 0);
 
-        /* Rough but seems to work. */
         memset(recbuff, '\0', sizeof recbuff);
-        recv(clientsock, recbuff, 1024, 0);
-        request = atoi(recbuff);
-        send(clientsock, data[request].data, CHUNKSIZE, 0);
-
-        close(clientsock); 
-    }    
+        while(recv(clientsock, recbuff, 1024, 0) > 0) {
+            fprintf(stdout, "new data %s", recbuff);
+            request = atoi(recbuff);
+            if(request < chunkc) {
+                fprintf(stdout, "sending chunk %d\n", request);
+                send(clientsock, data[request].data, CHUNKSIZE, 0);
+            }
+            else {
+                fprintf(stderr, "chunk over max %d/%d\n", request, chunkc);
+                send(clientsock, "chunk-max\n", strlen("chunk-max\n"), 0);
+            }
+        memset(recbuff, '\0', sizeof recbuff);
+        }
+    }
+    close(serversock);
     /* Clean up. */
     free(data);
 }
 
-void client(const char *filepath) {
+static void client(const char *hostname, const char *filepath) {
+    int servercon;
 
+    fprintf(stdout, "connecting to %s\n", hostname);
+    servercon = socket_connect(hostname);
+    
 }
 
 int main(int argc, char **argv) {
     int opt, isserver, isclient;
-    char filepath[1024];
+    char filepath[1024], servercon[1024];
 
     memset(filepath, '\0', sizeof filepath);
+    memset(servercon, '\0', sizeof servercon);
     isserver = 0;
     isclient = 0;
 
@@ -63,6 +75,7 @@ int main(int argc, char **argv) {
             /* Client. */
             case 'c':
                 isclient = 1;
+                strncpy(servercon, optarg, sizeof servercon);
                 break;
             default:
                 break;
@@ -74,8 +87,8 @@ int main(int argc, char **argv) {
         server(filepath);
     }
             /* Were a client. */
-    else if(isclient && (filepath[0] != '\0')) {
-        client(filepath);
+    else if(isclient && (filepath[0] != '\0' && servercon[0] != '\0')) {
+        client(servercon, filepath);
     }
     else {
         fprintf(stderr, "you gave some fucked up params\n");

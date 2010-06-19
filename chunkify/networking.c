@@ -45,3 +45,26 @@ int socket_accept(int sd) {
 
     return cd;
 }
+
+int socket_connect(const char *hostname) {
+    struct sockaddr_in pin;
+    struct hostent *hp;
+    int sd;
+
+    if((hp = gethostbyname(hostname)) == 0) {
+        exit(1);
+    }
+
+    memset(&pin, '\0', sizeof(pin));
+    pin.sin_family = AF_INET;
+    pin.sin_addr.s_addr = ((struct in_addr*)(hp->h_addr))->s_addr;
+    pin.sin_port = htons(13373);
+
+    if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        exit(1);
+    }
+    if(connect(sd, (struct sockaddr*)&pin, sizeof(pin)) == -1) {
+        exit(1);
+    }
+    return sd;
+}
