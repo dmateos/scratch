@@ -57,7 +57,7 @@ void send_mesg(connection_t *connection, char *to, char *arg) {
 }
 
 /* Handler functions, parse commands broken up by the main parser. */
-void handle_ping(connection_t *connection, char *arg) {
+static void handle_ping(connection_t *connection, char *arg) {
     char *cmdstr = calloc(DEFBUFFSIZE, sizeof(char));
     char *origcmdstr = cmdstr;
     char finalstr[DEFBUFFSIZE];
@@ -76,6 +76,18 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
 }
 
 static void handle_notice(connection_t *connection, ircdata_t *data) {
+
+}
+
+static void handle_mode(connection_t *connection, ircdata_t *data) {
+
+}
+
+static void handle_join(connection_t *connection, ircdata_t *data) {
+
+}
+
+static void handle_part(connection_t *connection, ircdata_t *data) {
 
 }
 
@@ -156,6 +168,12 @@ void irc_parser(connection_t *connection, char *msg) {
         handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
         handle_notice(connection, &data);
+    else if(!strcmp(data.command, "MODE"))
+        handle_mode(connection, &data);
+    else if(!strcmp(data.command, "JOIN"))
+        handle_join(connection, &data);
+    else if(!strcmp(data.command, "PART"))
+        handle_part(connection, &data);
     /* If its a digit we have a numeric command. */
     else if(isdigit(data.command[0]))
         handle_numeric(connection, &data);
