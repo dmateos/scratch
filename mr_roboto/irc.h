@@ -28,15 +28,15 @@ typedef struct IRC_DATA_S {
     char *prefix;
     char *command;
     char *params;
-} IRCDATA_T;
+} ircdata_t;
 
-void send_user(CONNECTION_T *connection);
-void send_nick(CONNECTION_T *connection);
-void send_altnick(CONNECTION_T *connection);
-void send_join(CONNECTION_T *connection, char *arg);
-void send_part(CONNECTION_T *connection, char *arg);
-void send_quit(CONNECTION_T *connection, char *arg);
-void send_mesg(CONNECTION_T *connection, char *to, char *arg);
+void send_user(connection_t *connection);
+void send_nick(connection_t *connection);
+void send_altnick(connection_t *connection);
+void send_join(connection_t *connection, char *arg);
+void send_part(connection_t *connection, char *arg);
+void send_quit(connection_t *connection, char *arg);
+void send_mesg(connection_t *connection, char *to, char *arg);
 
-void irc_parser(CONNECTION_T *connection, char *msg);
+void irc_parser(connection_t *connection, char *msg);
 #endif

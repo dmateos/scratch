@@ -7,8 +7,8 @@
 #include "irc.h"
 
 int main(int argc, char **argv) {
-    CONFIG_T config;
-    CONNECTION_T connection;
+    config_t config;
+    connection_t connection;
     char *configp; 
 
     if(argc == 2 && (strlen(argv[1]) > 0))

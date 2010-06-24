@@ -6,7 +6,7 @@
 #include "networking.h"
 #include "irc.h"
 
-void send_user(CONNECTION_T *connection) {
+void send_user(connection_t *connection) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "USER %s %s %s :%s\r\n", connection->config->name, 
@@ -14,42 +14,42 @@ void send_user(CONNECTION_T *connection) {
     send_string(connection, cmdstr);
 }
 
-void send_nick(CONNECTION_T *connection) {
+void send_nick(connection_t *connection) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "NICK %s\r\n", connection->config->name);
     send_string(connection, cmdstr);
 }
 
-void send_altnick(CONNECTION_T *connection) {
+void send_altnick(connection_t *connection) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "NICK %s\r\n", connection->config->altname);
     send_string(connection, cmdstr);
 }
 
-void send_join(CONNECTION_T *connection, char *arg) {
+void send_join(connection_t *connection, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "JOIN %s\r\n", arg);
     send_string(connection, cmdstr);
 }
 
-void send_part(CONNECTION_T *connection, char *arg) {
+void send_part(connection_t *connection, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr,'\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "PART %s\r\n", arg);
     send_string(connection, cmdstr);
 }
 
-void send_quit(CONNECTION_T *connection, char *arg) {
+void send_quit(connection_t *connection, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "QUIT :%s\r\n", arg);
     send_string(connection, cmdstr);
 }
 
-void send_mesg(CONNECTION_T *connection, char *to, char *arg) {
+void send_mesg(connection_t *connection, char *to, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "PRIVMSG %s :%s", to, arg);
@@ -57,7 +57,7 @@ void send_mesg(CONNECTION_T *connection, char *to, char *arg) {
 }
 
 /* Handler functions, parse commands broken up by the main parser. */
-void handle_ping(CONNECTION_T *connection, char *arg) {
+void handle_ping(connection_t *connection, char *arg) {
     char *cmdstr = calloc(DEFBUFFSIZE, sizeof(char));
     char *origcmdstr = cmdstr;
     char finalstr[DEFBUFFSIZE];
@@ -71,16 +71,16 @@ void handle_ping(CONNECTION_T *connection, char *arg) {
     free(cmdstr);
 }
 
-static void handle_privmsg(CONNECTION_T *connection, IRCDATA_T *data) {
+static void handle_privmsg(connection_t *connection, ircdata_t *data) {
     
 }
 
-static void handle_notice(CONNECTION_T *connection, IRCDATA_T *data) {
+static void handle_notice(connection_t *connection, ircdata_t *data) {
 
 }
 
 /* Handles numeric based commands, all in one as theres a shit ton. */
-static void handle_numeric(CONNECTION_T *connection, IRCDATA_T *data) {
+static void handle_numeric(connection_t *connection, ircdata_t *data) {
     int cmd = atoi(data->command);
 
     switch(cmd) {
@@ -109,9 +109,9 @@ static void handle_numeric(CONNECTION_T *connection, IRCDATA_T *data) {
     }
 }
 
-void irc_parser(CONNECTION_T *connection, char *msg) {
+void irc_parser(connection_t *connection, char *msg) {
     char *strptr, *backupmsg;
-    IRCDATA_T data;
+    ircdata_t data;
 
     /* Ping, easy. */
     if(strstr(msg, "PING :") != NULL) {

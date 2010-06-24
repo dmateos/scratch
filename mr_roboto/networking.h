@@ -14,10 +14,10 @@
 
 /* Holds low level socket info, counters, and a config object. */
 typedef struct CONNECTION_S {
-    CONFIG_T *config;
+    config_t *config;
     int socketdesc;
     int reccount, sendcount;
-} CONNECTION_T; 
+} connection_t; 
 
 /* Establishes a connection with the server details specified in config, and 
  * builds a connection structure.
@@ -25,24 +25,24 @@ typedef struct CONNECTION_S {
  * @param connection, Structure to store the connection info.
  * @return 0,1
  */
-int establish_connection(CONFIG_T *config, CONNECTION_T *connection);
+int establish_connection(config_t *config, connection_t *connection);
 
 /* Closes the connection created with establish_connection.
  * @param connection, Connection to close. 
  */
-void close_connection(CONNECTION_T *connection);
+void close_connection(connection_t *connection);
 
 /* Sends a string over the connection specified. 
  * @param connection, Connection to use. 
  * @param msg, String of data to send. 
  * @return, count of data sent.
  */
-int send_string(CONNECTION_T *connection, char *msg);
+int send_string(connection_t *connection, char *msg);
 
 /* Reads data from the connection and passes it to a event reciever to handle. 
  * @param connection, Connection to poll for data. 
  * @param eventptr, Callback to send the data too. 
  */
-void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*));
+void event_loop(connection_t *connection, void(*eventptr)(connection_t*, char*));
 
 #endif

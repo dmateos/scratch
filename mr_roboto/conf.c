@@ -3,7 +3,7 @@
 #include <string.h>
 #include "conf.h"
 
-int load_config(char *path, CONFIG_T *config) {
+int load_config(char *path, config_t *config) {
     FILE *file;
     char *buffer, *origbuffer;
     char *cmd;
@@ -64,7 +64,7 @@ int load_config(char *path, CONFIG_T *config) {
     return 0;
 }
 
-void free_config(CONFIG_T *config) {
+void free_config(config_t *config) {
     if(config->server != NULL)
         free(config->server);
     if(config->name != NULL)
@@ -79,7 +79,7 @@ void free_config(CONFIG_T *config) {
     free(config->cfgname);
 }
 
-void check_config(CONFIG_T *config) {
+void check_config(config_t *config) {
     fprintf(stderr, "-----%s------\n", config->cfgname);
     fprintf(stderr, "server: %s\n", config->server);
     fprintf(stderr, "port: %d\n", config->port);

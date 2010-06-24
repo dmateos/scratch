@@ -17,16 +17,19 @@ static void server(const char *filepath) {
     memset(hellomsg, '\0', sizeof hellomsg);
     snprintf(hellomsg, 1024, "chunkify %d,%d\n", chunkc, CHUNKSIZE);
 
-    /* Accept a client. */
     serversock = socket_listen();
 
     while(1) {
         clientsock = socket_accept(serversock);
         send(clientsock, hellomsg, strlen(hellomsg), 0);
+        fprintf(stdout, "new connection\n");
 
+        /* Read loop while client isnt discon. */
         memset(recbuff, '\0', sizeof recbuff);
         while(recv(clientsock, recbuff, 1024, 0) > 0) {
             fprintf(stdout, "new data %s", recbuff);
+
+            /* Convert to int and handle. */
             request = atoi(recbuff);
             if(request < chunkc) {
                 fprintf(stdout, "sending chunk %d\n", request);
@@ -45,11 +48,10 @@ static void server(const char *filepath) {
 }
 
 static void client(const char *hostname, const char *filepath) {
-    int servercon;
+    int servercon, chunksize, chunkcount;
 
     fprintf(stdout, "connecting to %s\n", hostname);
-    servercon = socket_connect(hostname);
-    
+    servercon = socket_connect(hostname);    
 }
 
 int main(int argc, char **argv) {
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
     if(isserver && (filepath[0] != '\0')) {
         server(filepath);
     }
-            /* Were a client. */
+   /* Were a client. */
     else if(isclient && (filepath[0] != '\0' && servercon[0] != '\0')) {
         client(servercon, filepath);
     }

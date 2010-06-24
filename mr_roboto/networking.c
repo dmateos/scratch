@@ -9,7 +9,7 @@
 #include "networking.h"
 #include "conf.h"
 
-int establish_connection(CONFIG_T *config, CONNECTION_T *connection) {
+int establish_connection(config_t *config, connection_t *connection) {
     struct sockaddr_in pin;
     struct hostent *hp;
     int sd;
@@ -37,12 +37,12 @@ int establish_connection(CONFIG_T *config, CONNECTION_T *connection) {
     return sd;
 }
 
-void close_connection(CONNECTION_T *connection) {
+void close_connection(connection_t *connection) {
     close(connection->socketdesc);
     fprintf(stderr, "sent:%d bytes, recv:%d bytes\n", connection->sendcount, connection->reccount);
 }
 
-int send_string(CONNECTION_T *connection, char *message) {
+int send_string(connection_t *connection, char *message) {
     int sent = send(connection->socketdesc, message, strlen(message), 0);
     connection->sendcount += sent;
     return sent;
@@ -102,7 +102,7 @@ static void *read_line(char *buffer, struct readstate_s *state) {
 }
 
 /* TODO: msg max so we can get insta responses for inapp calls? */
-void event_loop(CONNECTION_T *connection, void(*eventptr)(CONNECTION_T*, char*)) {
+void event_loop(connection_t *connection, void(*eventptr)(connection_t*, char*)) {
     char recbuffer[DEFBUFFSIZE], *buffptr;
     int count = 0;
     struct readstate_s readstate;

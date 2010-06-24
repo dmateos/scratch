@@ -15,23 +15,23 @@ typedef struct CONFIG_S {
     int port;
     char *cmdchan;
     char *cfgname;
-} CONFIG_T;
+} config_t;
 
 /* Loads a config from a file into the config structure. 
  * @param path, Path of the config file to load.
  * @param config, Config structure to store data in (preallocated with allocated entries) 
  * @returns 0,1
  */
-int load_config(char *path, CONFIG_T *config);
+int load_config(char *path, config_t *config);
 
 /* Frees a configuration files allocated entries.
  *  @param config, The config structure to free.
  */
-void free_config(CONFIG_T *config);
+void free_config(config_t *config);
 
 /* Checks integrity of config file.
  * @param config, Config object to check. 
  */
-void check_config(CONFIG_T *config);
+void check_config(config_t *config);
 
 #endif
