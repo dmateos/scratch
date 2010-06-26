@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "main.h"
 #include "conf.h"
 #include "networking.h"
@@ -9,15 +10,25 @@
 int main(int argc, char **argv) {
     config_t config;
     connection_t connection;
-    char *configp; 
+    char configpath[128];
+    int opt;
 
-    if(argc == 2 && (strlen(argv[1]) > 0))
-        configp = argv[1];
-    else
-        configp = "roboto.conf";
+    memset(configpath, '\0', sizeof configpath);
+    strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
+
+    while((opt = getopt(argc, argv, "c:")) != -1) {
+        switch(opt) {
+            case 'c':
+                memset(configpath, '\0', sizeof configpath);
+                strncpy(configpath, optarg, strlen(optarg));                
+                break;
+            default:
+                break;
+        }
+    }
 
     /* Load and check config details. */
-    if(load_config(configp, &config) == -1)
+    if(load_config(configpath, &config) == -1)
         return -1;
     check_config(&config);
 
