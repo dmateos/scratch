@@ -12,5 +12,9 @@ conf.o: conf.c
 	cc -g -c conf.c -I/usr/local/include -I.
 module.o: module.c
 	cc -g -c module.c -I/usr/local/include -I.
+
+modules: modules/testmod.c
+	cc -g -c -shared -nostartfiles -o modules/module.mod modules/testmod.c 
+
 clean:
 	rm -f xsinit.c *.o mrroboto

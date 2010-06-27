@@ -15,6 +15,7 @@ typedef struct CONFIG_S {
     int port;
     char *cmdchan;
     char *cfgname;
+    char *modpath;
 } config_t;
 
 /* Loads a config from a file into the config structure. 

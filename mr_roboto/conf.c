@@ -56,6 +56,10 @@ int load_config(char *path, config_t *config) {
                 config->cmdchan = calloc(strlen(buffer)+1, sizeof(char));
                 strncpy(config->cmdchan, buffer, strlen(buffer));
             }
+            else if(!strcmp(cmd, "module")) {
+                config->modpath = calloc(strlen(buffer)+1, sizeof(char));
+                strncpy(config->modpath, buffer, strlen(buffer));
+            }
         }
         buffer = origbuffer;
     }
@@ -75,6 +79,8 @@ void free_config(config_t *config) {
         free(config->realname);
     if(config->cmdchan != NULL)
         free(config->cmdchan);
+    if(config->modpath != NULL)
+        free(config->modpath);
 
     free(config->cfgname);
 }
@@ -87,5 +93,6 @@ void check_config(config_t *config) {
     fprintf(stderr, "altname: %s\n", config->altname);
     fprintf(stderr, "realname: %s\n", config->realname);
     fprintf(stderr, "cmdchan: %s\n", config->cmdchan);
+    fprintf(stderr, "modpath: %s\n", config->modpath);
     fprintf(stderr, "-----------------\n");
 }

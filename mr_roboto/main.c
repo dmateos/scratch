@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
     char configpath[128];
     config_t config;
     connection_t connection;
+    void *module;
 
     memset(configpath, '\0', sizeof configpath);
     strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
@@ -38,12 +39,17 @@ int main(int argc, char **argv) {
     else 
         return -1;
 
+    /* Load our c bot modules if any. */
+    /* Manual atm just for testing. */
+    module = load_module(config.modpath);
+
     establish_connection(&config, &connection);
     send_user(&connection);
     send_nick(&connection);
     send_join(&connection, config.cmdchan);
     event_loop(&connection, irc_parser);
 
+    if(module) unload_module(module);
     close_connection(&connection);
     free_config(&config);
 
