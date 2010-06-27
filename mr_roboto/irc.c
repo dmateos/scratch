@@ -87,26 +87,9 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
     *fromhost = '\0';
     fromhost+=1;
 
+    /* Now we can do stuff with the data finally! */
     fprintf(stderr, "pm from %s(%s)\nto %s\n%s\n", from, fromhost, to, msg);
-    if(!strcmp(from, "dman")) {
-        send_mesg(connection, from, "wazza");
-    }
-}
-
-static void handle_notice(connection_t *connection, ircdata_t *data) {
-
-}
-
-static void handle_mode(connection_t *connection, ircdata_t *data) {
-
-}
-
-static void handle_join(connection_t *connection, ircdata_t *data) {
-
-}
-
-static void handle_part(connection_t *connection, ircdata_t *data) {
-
+    send_mesg(connection, from, msg); //echo!
 }
 
 /* Handles numeric based commands, all in one as theres a shit ton. */
@@ -182,19 +165,29 @@ void irc_parser(connection_t *connection, char *msg) {
 
     /* First level of data parsed, call subparser depending on the command. */
     fprintf(stderr, "prfx(%s), cmd(%s) %s\n", data.prefix, data.command, data.params);
-    if(!strcmp(data.command, "PRIVMSG"))
+    /* If its a digit we have a numeric command. */
+    if(isdigit(data.command[0]))
+        handle_numeric(connection, &data);
+    else if(!strcmp(data.command, "PRIVMSG"))
         handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
-        handle_notice(connection, &data);
+        ;
     else if(!strcmp(data.command, "MODE"))
-        handle_mode(connection, &data);
+        ;
     else if(!strcmp(data.command, "JOIN"))
-        handle_join(connection, &data);
+        ;
     else if(!strcmp(data.command, "PART"))
-        handle_part(connection, &data);
-    /* If its a digit we have a numeric command. */
-    else if(isdigit(data.command[0]))
-        handle_numeric(connection, &data);
+        ;
+    else if(!strcmp(data.command, "TOPIC"))
+        ;
+    else if(!strcmp(data.command, "AWAY"))
+        ;
+    else if(!strcmp(data.command, "INVITE"))
+        ;
+    else if(!strcmp(data.command, "KICK"))
+        ;
+    else if(!strcmp(data.command, "QUIT"))
+        ;
 
     free(backupmsg);
     free(data.prefix);

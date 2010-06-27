@@ -85,7 +85,7 @@ static void *read_line(char *buffer, struct readstate_s *state) {
     /* Find the end of our message. if we cant we have incomplete message so 
      * add it to the backbuffer for next time (our friend above). */
     if(!(newend = strstr(buffer, TERM))) {
-#ifdef NETDEBUG
+#ifdef NET_DEBUG
         fprintf(stderr, "filling backbuffer (%s)\n", buffer);
 #endif
         memcpy(state->backbuffer, buffer, strlen(buffer));        

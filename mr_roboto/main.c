@@ -6,6 +6,7 @@
 #include "conf.h"
 #include "networking.h"
 #include "irc.h"
+#include "module.h"
 
 int main(int argc, char **argv) {
     int opt;
