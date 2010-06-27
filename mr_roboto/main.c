@@ -8,19 +8,23 @@
 #include "irc.h"
 
 int main(int argc, char **argv) {
+    int opt;
+    char configpath[128];
     config_t config;
     connection_t connection;
-    char configpath[128];
-    int opt;
 
     memset(configpath, '\0', sizeof configpath);
     strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
 
-    while((opt = getopt(argc, argv, "c:")) != -1) {
+    /* Parse command line args. */
+    while((opt = getopt(argc, argv, "c:r")) != -1) {
         switch(opt) {
             case 'c':
                 memset(configpath, '\0', sizeof configpath);
-                strncpy(configpath, optarg, strlen(optarg));                
+                strncpy(configpath, optarg, sizeof configpath);                
+                break;
+            /* TODO relay mode? could be cool. */
+            case 'r':
                 break;
             default:
                 break;
@@ -28,9 +32,10 @@ int main(int argc, char **argv) {
     }
 
     /* Load and check config details. */
-    if(load_config(configpath, &config) == -1)
+    if(!load_config(configpath, &config))
+        check_config(&config);
+    else 
         return -1;
-    check_config(&config);
 
     establish_connection(&config, &connection);
     send_user(&connection);
@@ -40,5 +45,6 @@ int main(int argc, char **argv) {
 
     close_connection(&connection);
     free_config(&config);
+
     return 0;
 }

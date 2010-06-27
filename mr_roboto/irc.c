@@ -52,7 +52,7 @@ void send_quit(connection_t *connection, char *arg) {
 void send_mesg(connection_t *connection, char *to, char *arg) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
-    snprintf(cmdstr, DEFBUFFSIZE, "PRIVMSG %s :%s", to, arg);
+    snprintf(cmdstr, DEFBUFFSIZE, "PRIVMSG %s :%s\r\n", to, arg);
     send_string(connection, cmdstr);
 }
 
@@ -72,7 +72,25 @@ static void handle_ping(connection_t *connection, char *arg) {
 }
 
 static void handle_privmsg(connection_t *connection, ircdata_t *data) {
-    
+    char *to, *msg, *from, *fromhost;
+
+    /* Who msg to and the message are in the params. 
+       Set to, then seek to the next param chop it off and set it as msg. */
+    to = data->params;
+    msg = strchr(data->params, ' ');
+    *msg = '\0';
+    msg+=2;
+
+    /* Who its from is in the prefix. */
+    from = data->prefix;
+    fromhost = strchr(data->prefix, '!');
+    *fromhost = '\0';
+    fromhost+=1;
+
+    fprintf(stderr, "pm from %s(%s)\nto %s\n%s\n", from, fromhost, to, msg);
+    if(!strcmp(from, "dman")) {
+        send_mesg(connection, from, "wazza");
+    }
 }
 
 static void handle_notice(connection_t *connection, ircdata_t *data) {
