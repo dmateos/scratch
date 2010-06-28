@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
 
     /* Parse command line args. */
-    while((opt = getopt(argc, argv, "c:r")) != -1) {
+    while((opt = getopt(argc, argv, "c:rhv")) != -1) {
         switch(opt) {
             case 'c':
                 memset(configpath, '\0', sizeof configpath);
@@ -27,6 +27,11 @@ int main(int argc, char **argv) {
                 break;
             /* TODO relay mode? could be cool. */
             case 'r':
+                break;
+            case 'h':
+            case 'v':
+                fprintf(stdout, "mrroboto v0.1\n");
+                exit(0);
                 break;
             default:
                 break;
@@ -40,7 +45,6 @@ int main(int argc, char **argv) {
         return -1;
 
     /* Load our c bot modules if any. */
-    /* Manual atm just for testing. */
     module = load_module(config.modpath);
 
     establish_connection(&config, &connection);

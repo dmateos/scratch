@@ -93,6 +93,6 @@ void check_config(config_t *config) {
     fprintf(stderr, "altname: %s\n", config->altname);
     fprintf(stderr, "realname: %s\n", config->realname);
     fprintf(stderr, "cmdchan: %s\n", config->cmdchan);
-    fprintf(stderr, "modpath: %s\n", config->modpath);
+    fprintf(stderr, "module: %s\n", config->modpath);
     fprintf(stderr, "-----------------\n");
 }
