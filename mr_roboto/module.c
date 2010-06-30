@@ -4,6 +4,9 @@
 
 #include "module.h"
 
+#define INITF "mod_main"
+#define EXITF "mod_exit"
+
 void *load_module(char *path) {
     void *module;
     void (*initfp)(void);
@@ -13,7 +16,7 @@ void *load_module(char *path) {
         fprintf(stderr, "could not load moudle %s\n", path);
         return NULL;
     }
-    if(!(initfp = dlsym(module, "mod_main"))) {
+    if(!(initfp = dlsym(module, INITF))) {
         fprintf(stderr, "could not load module init function %s\n", path);
     }
 
@@ -26,7 +29,7 @@ void unload_module(void *module) {
     void (*destructfp)(void);
 
     /* If a destructor exsists, run it. */
-    if((destructfp = dlsym(module, "mod_exit")))
+    if((destructfp = dlsym(module, EXITF)))
         destructfp();
 
     dlclose(module);

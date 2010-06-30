@@ -83,13 +83,17 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
 
     /* Who its from is in the prefix. */
     from = data->prefix;
-    fromhost = strchr(data->prefix, '!');
+    fromhost = strchr(data->prefix, '!'); /* Could be null if from server? */
     *fromhost = '\0';
     fromhost+=1;
 
     /* Now we can do stuff with the data finally! */
     fprintf(stderr, "pm from %s(%s)\nto %s\n%s\n", from, fromhost, to, msg);
-    send_mesg(connection, from, msg); //echo!
+
+    if(ischan(to))
+        send_mesg(connection, to, msg); //channel echo!
+    else 
+        send_mesg(connection, from, msg); //echo!
 }
 
 /* Handles numeric based commands, all in one as theres a shit ton. */

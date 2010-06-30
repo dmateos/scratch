@@ -6,6 +6,11 @@
 
 #include "networking.h"
 
+/* Well probably a channel, who can be sure. */
+#define ischan(x) (x[0] == '#')
+
+#define isnumeric(x) (isdigit(x[0]) && isdigit(x[1]) && isdigit(x[2]))
+
 /* IRC RFC CMD CODES, not all of them just the ones that look important and added
    as needed. */
 #define RPL_NAMEREPLY 353
