@@ -57,18 +57,11 @@ void send_mesg(connection_t *connection, char *to, char *arg) {
 }
 
 /* Handler functions, parse commands broken up by the main parser. */
-static void handle_ping(connection_t *connection, char *arg) {
-    char *cmdstr = calloc(DEFBUFFSIZE, sizeof(char));
-    char *origcmdstr = cmdstr;
-    char finalstr[DEFBUFFSIZE];
-
-    strncpy(cmdstr, arg, strlen(arg));
-    strsep(&cmdstr, " ");
-    snprintf(finalstr, DEFBUFFSIZE, "PONG %s\r\n", cmdstr);
-    send_string(connection, finalstr);
-
-    cmdstr = origcmdstr;
-    free(cmdstr);
+static void handle_ping(connection_t *connection, ircdata_t *data) {
+    char cmdstr[DEFBUFFSIZE];
+    memset(cmdstr, '\0', sizeof cmdstr);
+    snprintf(cmdstr, DEFBUFFSIZE, "PONG %s\r\n", data->params);
+    send_string(connection, cmdstr);
 }
 
 static void handle_privmsg(connection_t *connection, ircdata_t *data) {
@@ -88,12 +81,18 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
     fromhost+=1;
 
     /* Now we can do stuff with the data finally! */
-    fprintf(stderr, "pm from %s(%s)\nto %s\n%s\n", from, fromhost, to, msg);
+    fprintf(stderr, "\tpm from %s(%s)\n\tto %s\n\t%s\n", from, fromhost, to, msg);
 
+    /*
     if(ischan(to))
         send_mesg(connection, to, msg); //channel echo!
     else 
         send_mesg(connection, from, msg); //echo!
+    */
+}
+
+static void handle_chanevent(connection_t *connection, ircdata_t *data) {
+    
 }
 
 /* Handles numeric based commands, all in one as theres a shit ton. */
@@ -129,15 +128,9 @@ static void handle_numeric(connection_t *connection, ircdata_t *data) {
 void irc_parser(connection_t *connection, char *msg) {
     char *strptr, *backupmsg;
     ircdata_t data;
+    memset(&data, '\0', sizeof(data));    
 
-    /* Ping, easy. */
-    if(strstr(msg, "PING :") != NULL) {
-        handle_ping(connection, msg);
-        return;
-    }
-
-    /* MSG: :prefix!prefixend command :params 
-       Get the first token, this fucks our msg so make a backup. */
+    /* Get the first token, this fucks the params part so make a backup. */
     backupmsg = calloc(strlen(msg)+1, sizeof(char));
     strncpy(backupmsg, msg, strlen(msg));
     if(!(strptr = strtok(msg, " "))) {
@@ -150,14 +143,21 @@ void irc_parser(connection_t *connection, char *msg) {
         data.prefix = calloc(strlen(strptr)+1, sizeof(char));
         strncpy(data.prefix, strptr, strlen(strptr));
     }
-
-    /* Grab the next token which should be the command. */
-    if(!(strptr = strtok(NULL, " "))) {
-        fprintf(stderr, "parse error command\n");
-        return; /* more oh shit. */
+    /* Else its a command. */
+    else {
+        data.command = calloc(strlen(strptr)+1, sizeof(char));
+        strncpy(data.command, strptr, strlen(strptr));
     }
-    data.command = calloc(strlen(strptr)+1, sizeof(char));
-    strncpy(data.command, strptr, strlen(strptr));
+
+    /* If the above was a prefix (no command), it means NOW we get the comnand. */
+    if(data.command == NULL) {
+        if(!(strptr = strtok(NULL, " "))) {
+            fprintf(stderr, "parse error command\n");
+            return; /* more oh shit. */
+        }
+        data.command = calloc(strlen(strptr)+1, sizeof(char));
+        strncpy(data.command, strptr, strlen(strptr));
+    }
 
     /* Seek to the params in our backup msg using the command as reference. */
     if(!(strptr = strstr(backupmsg, data.command)+strlen(data.command)+1)) {
@@ -167,34 +167,35 @@ void irc_parser(connection_t *connection, char *msg) {
     data.params = calloc(strlen(strptr)+1, sizeof(char));
     strncpy(data.params, strptr, strlen(strptr));
 
-    /* First level of data parsed, call subparser depending on the command. */
+    /* First level of data parsed, we now have a structure containing possibly a prefix, 
+     * a command and some params, call subparser depending on the command. */
     fprintf(stderr, "prfx(%s), cmd(%s) %s\n", data.prefix, data.command, data.params);
     /* If its a digit we have a numeric command. */
     if(isdigit(data.command[0]))
         handle_numeric(connection, &data);
+    else if(!strcmp(data.command, "PING"))
+        handle_ping(connection, &data);
     else if(!strcmp(data.command, "PRIVMSG"))
         handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
         ;
     else if(!strcmp(data.command, "MODE"))
-        ;
+        handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "JOIN"))
-        ;
+        handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "PART"))
-        ;
+        handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "TOPIC"))
-        ;
-    else if(!strcmp(data.command, "AWAY"))
-        ;
+        handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "INVITE"))
-        ;
+        handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "KICK"))
-        ;
+        handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "QUIT"))
-        ;
+        handle_chanevent(connection, &data);
 
     free(backupmsg);
-    free(data.prefix);
+    if(data.prefix) free(data.prefix);
     free(data.command);
     free(data.params);
 }
