@@ -6,10 +6,10 @@
 
 #include "networking.h"
 
-/* Well probably a channel, who can be sure. */
+/* Some quick string tests. */
 #define ischan(x) (x[0] == '#')
-
 #define isnumeric(x) (isdigit(x[0]) && isdigit(x[1]) && isdigit(x[2]))
+#define isctcp(x) (x[0] == 1 && x[strlen(x)-1] == 1)
 
 /* IRC RFC CMD CODES, not all of them just the ones that look important and added
    as needed. */
@@ -34,16 +34,6 @@ typedef struct IRC_DATA_S {
     char *command;
     char *params;
 } ircdata_t;
-
-void send_user(connection_t *connection);
-void send_nick(connection_t *connection);
-void send_altnick(connection_t *connection);
-void send_join(connection_t *connection, char *arg);
-void send_part(connection_t *connection, char *arg);
-void send_quit(connection_t *connection, char *arg);
-void send_mesg(connection_t *connection, char *to, char *arg);
-void send_notice(connection_t *connection, char *to, char *arg);
-void send_ctcp(connection_t *connection, char *to, char *arg);
 
 void irc_parser(connection_t *connection, char *msg);
 #endif
