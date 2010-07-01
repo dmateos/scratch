@@ -56,12 +56,38 @@ void send_mesg(connection_t *connection, char *to, char *arg) {
     send_string(connection, cmdstr);
 }
 
+void send_notice(connection_t *connection, char *to, char *arg) {
+    char cmdstr[DEFBUFFSIZE];
+    memset(cmdstr, '\0', sizeof cmdstr);
+    snprintf(cmdstr, DEFBUFFSIZE, "NOTICE %s :%s\r\n", to, arg);
+    send_string(connection, cmdstr);
+}
+
+void send_ctcp(connection_t *connection, char *to, char *arg) {
+    char cmdstr[DEFBUFFSIZE];
+    memset(cmdstr, '\0', sizeof cmdstr);
+    snprintf(cmdstr, DEFBUFFSIZE, "NOTICE %s :%c%s%c\r\n", to, 1, arg, 1);
+    send_string(connection, cmdstr);
+}
+
 /* Handler functions, parse commands broken up by the main parser. */
 static void handle_ping(connection_t *connection, ircdata_t *data) {
     char cmdstr[DEFBUFFSIZE];
     memset(cmdstr, '\0', sizeof cmdstr);
     snprintf(cmdstr, DEFBUFFSIZE, "PONG %s\r\n", data->params);
     send_string(connection, cmdstr);
+}
+
+/* Called by handle_privmsg if its a ctcp msg. */
+static void handle_ctcp(connection_t *connection, char *to, char *from, char *fromhost, char *msg) {
+    /* Strip the ctcp encaps. */
+    msg+=1;
+    msg[strlen(msg)-1] = '\0';
+
+    if(!strcasecmp(msg, "VERSION"))
+        send_ctcp(connection, from, "VERSION MrRoboto 0.1 (http://github.com/dmateos/scratch/blob/master/mr_roboto/)");
+    else if(!strcasecmp(msg, "PING"))
+        send_ctcp(connection, from, "PING");
 }
 
 static void handle_privmsg(connection_t *connection, ircdata_t *data) {
@@ -79,6 +105,12 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
     fromhost = strchr(data->prefix, '!'); /* Could be null if from server? */
     *fromhost = '\0';
     fromhost+=1;
+
+    /* Might be a CTCP privmsg, we handle that elsewhere. */
+    if(msg[0] == 1 && msg[strlen(msg)-1] == 1) {
+        handle_ctcp(connection, to, from, fromhost, msg);
+        return;
+    }
 
     /* Now we can do stuff with the data finally! */
     fprintf(stderr, "\tpm from %s(%s)\n\tto %s\n\t%s\n", from, fromhost, to, msg);
@@ -176,7 +208,7 @@ void irc_parser(connection_t *connection, char *msg) {
     else if(!strcmp(data.command, "PING"))
         handle_ping(connection, &data);
     else if(!strcmp(data.command, "PRIVMSG"))
-        handle_privmsg(connection, &data);
+            handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
         ;
     else if(!strcmp(data.command, "MODE"))

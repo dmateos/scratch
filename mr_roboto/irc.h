@@ -42,6 +42,8 @@ void send_join(connection_t *connection, char *arg);
 void send_part(connection_t *connection, char *arg);
 void send_quit(connection_t *connection, char *arg);
 void send_mesg(connection_t *connection, char *to, char *arg);
+void send_notice(connection_t *connection, char *to, char *arg);
+void send_ctcp(connection_t *connection, char *to, char *arg);
 
 void irc_parser(connection_t *connection, char *msg);
 #endif
