@@ -34,6 +34,7 @@ int establish_connection(config_t *config, connection_t *connection) {
     connection->socketdesc = sd;
     connection->config = config;
 
+    fprintf(stderr, "Socket connected to %s\n", config->server);
     return sd;
 }
 
@@ -45,6 +46,7 @@ void close_connection(connection_t *connection) {
 int send_string(connection_t *connection, char *message) {
     int sent = send(connection->socketdesc, message, strlen(message), 0);
     connection->sendcount += sent;
+    fprintf(stderr, "-> %s", message);
     return sent;
 }
 

@@ -9,6 +9,15 @@
 #include "irc_send.h"
 #include "module.h"
 
+static void print_help() {
+    fprintf(stdout, "Mr Roboto Modular IRC Bot\n");
+    fprintf(stdout, "http://github.com/dmateos/scratch/tree/master/mr_roboto/\n");
+    fprintf(stdout, "\t-c arg Specify config file (default roboto.conf)\n");
+    fprintf(stdout, "\t-d level Debug level (default 0)\n");
+    fprintf(stdout, "\t-h Print this help page\n");
+    fprintf(stdout, "\t-v Print the program version\n");
+}
+
 int main(int argc, char **argv) {
     int opt, i;
     char configpath[128];
@@ -20,7 +29,7 @@ int main(int argc, char **argv) {
     strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
 
     /* Parse command line args. */
-    while((opt = getopt(argc, argv, "c:rhv")) != -1) {
+    while((opt = getopt(argc, argv, "c:rhvd")) != -1) {
         switch(opt) {
             case 'c':
                 memset(configpath, '\0', sizeof configpath);
@@ -30,6 +39,10 @@ int main(int argc, char **argv) {
             case 'r':
                 break;
             case 'h':
+                print_help();
+                exit(0);
+            case 'd':
+                break;
             case 'v':
                 fprintf(stdout, "mrroboto v0.1\n");
                 exit(0);
@@ -47,6 +60,7 @@ int main(int argc, char **argv) {
 
     /* Load our c bot modules if any. */
     for(i = 0; i < config.modcount; i++) {
+        fprintf(stderr, "Loading mod: %s\n", config.modpath[i]);
         module[i] = load_module(config.modpath[i]);
     }
 

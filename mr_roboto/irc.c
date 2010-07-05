@@ -52,12 +52,14 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
     /* Now we can do stuff with the data finally! */
     fprintf(stderr, "\tpm from %s(%s)\n\tto %s\n\t%s\n", from, fromhost, to, msg);
 
-    /*
     if(ischan(to))
         send_mesg(connection, to, msg); //channel echo!
     else 
         send_mesg(connection, from, msg); //echo!
-    */
+}
+
+static void handle_notice(connection_t *connection, ircdata_t *data) {
+
 }
 
 static void handle_chanevent(connection_t *connection, ircdata_t *data) {
@@ -147,7 +149,7 @@ void irc_parser(connection_t *connection, char *msg) {
     else if(!strcmp(data.command, "PRIVMSG"))
         handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
-        ;
+        handle_notice(connection, &data);
     else if(!strcmp(data.command, "MODE"))
         handle_chanevent(connection, &data);
     else if(!strcmp(data.command, "JOIN"))
