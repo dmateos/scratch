@@ -1,1 +1,2 @@
 gcc -shared -fPIC -nostartfiles -o testmod.mod testmod.c
+gcc -shared -fPIC -nostartfiles -o testmod2.mod testmod2.c

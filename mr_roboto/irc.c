@@ -145,7 +145,7 @@ void irc_parser(connection_t *connection, char *msg) {
     else if(!strcmp(data.command, "PING"))
         handle_ping(connection, &data);
     else if(!strcmp(data.command, "PRIVMSG"))
-            handle_privmsg(connection, &data);
+        handle_privmsg(connection, &data);
     else if(!strcmp(data.command, "NOTICE"))
         ;
     else if(!strcmp(data.command, "MODE"))

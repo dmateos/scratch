@@ -5,6 +5,7 @@
 #define _CONFIG_H_
 
 #define CFG_BUFFSIZE 1024
+#define CFG_MODMAX 32
 
 /* Structure containing various config entries. */
 typedef struct CONFIG_S {
@@ -15,7 +16,9 @@ typedef struct CONFIG_S {
     int port;
     char *cmdchan;
     char *cfgname;
-    char *modpath;
+    char *modpath[CFG_MODMAX];
+
+    int modcount;
 } config_t;
 
 /* Loads a config from a file into the config structure. 

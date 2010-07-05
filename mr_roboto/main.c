@@ -10,11 +10,11 @@
 #include "module.h"
 
 int main(int argc, char **argv) {
-    int opt;
+    int opt, i;
     char configpath[128];
     config_t config;
     connection_t connection;
-    void *module;
+    void *module[CFG_MODMAX];
 
     memset(configpath, '\0', sizeof configpath);
     strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
@@ -46,7 +46,9 @@ int main(int argc, char **argv) {
         return -1;
 
     /* Load our c bot modules if any. */
-    module = load_module(config.modpath);
+    for(i = 0; i < config.modcount; i++) {
+        module[i] = load_module(config.modpath[i]);
+    }
 
     establish_connection(&config, &connection);
     send_user(&connection);
@@ -54,7 +56,8 @@ int main(int argc, char **argv) {
     send_join(&connection, config.cmdchan);
     event_loop(&connection, irc_parser);
 
-    if(module) unload_module(module);
+    for(i = 0; i < config.modcount; i++)
+        if(module[i]) unload_module(module[i]);
     close_connection(&connection);
     free_config(&config);
 

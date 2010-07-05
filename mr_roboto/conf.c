@@ -57,8 +57,14 @@ int load_config(char *path, config_t *config) {
                 strncpy(config->cmdchan, buffer, strlen(buffer));
             }
             else if(!strcmp(cmd, "module")) {
-                config->modpath = calloc(strlen(buffer)+1, sizeof(char));
-                strncpy(config->modpath, buffer, strlen(buffer));
+                if(config->modcount < CFG_MODMAX) {
+                    config->modpath[config->modcount] = calloc(strlen(buffer)+1, sizeof(char));
+                    strncpy(config->modpath[config->modcount], buffer, strlen(buffer));
+                    config->modcount++;
+                }
+                else {
+                    fprintf(stderr, "warning: could not load mod %s due to modmax %d\n", buffer, CFG_MODMAX);
+                }
             }
         }
         buffer = origbuffer;
@@ -69,6 +75,8 @@ int load_config(char *path, config_t *config) {
 }
 
 void free_config(config_t *config) {
+    int i;
+
     if(config->server != NULL)
         free(config->server);
     if(config->name != NULL)
@@ -79,13 +87,16 @@ void free_config(config_t *config) {
         free(config->realname);
     if(config->cmdchan != NULL)
         free(config->cmdchan);
-    if(config->modpath != NULL)
-        free(config->modpath);
 
+    for(i = 0; i < config->modcount; i++) {
+        if(config->modpath[i] != NULL)
+            free(config->modpath[i]);
+    }
     free(config->cfgname);
 }
 
 void check_config(config_t *config) {
+    int i;
     fprintf(stderr, "-----%s------\n", config->cfgname);
     fprintf(stderr, "server: %s\n", config->server);
     fprintf(stderr, "port: %d\n", config->port);
@@ -93,6 +104,9 @@ void check_config(config_t *config) {
     fprintf(stderr, "altname: %s\n", config->altname);
     fprintf(stderr, "realname: %s\n", config->realname);
     fprintf(stderr, "cmdchan: %s\n", config->cmdchan);
-    fprintf(stderr, "module: %s\n", config->modpath);
+    
+    for(i = 0; i < config->modcount; i++) {
+        fprintf(stderr, "module: %s\n", config->modpath[i]);
+    }
     fprintf(stderr, "-----------------\n");
 }
