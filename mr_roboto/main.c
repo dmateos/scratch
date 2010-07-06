@@ -10,7 +10,7 @@
 #include "module.h"
 
 static void print_help() {
-    fprintf(stdout, "Mr Roboto Modular IRC Bot\n");
+    fprintf(stdout, "Mr Roboto Modular IRC Bot Version 0.1 Alpha1\n");
     fprintf(stdout, "http://github.com/dmateos/scratch/tree/master/mr_roboto/\n");
     fprintf(stdout, "\t-c arg Specify config file (default roboto.conf)\n");
     fprintf(stdout, "\t-d level Debug level (default 0)\n");
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     char configpath[128];
     config_t config;
     connection_t connection;
-    void *module[CFG_MODMAX];
+    moddata_t *module[CFG_MODMAX];
 
     memset(configpath, '\0', sizeof configpath);
     strncpy(configpath, "roboto.conf", strlen("roboto.conf"));
@@ -39,13 +39,10 @@ int main(int argc, char **argv) {
             case 'r':
                 break;
             case 'h':
+            case 'v':
                 print_help();
                 exit(0);
             case 'd':
-                break;
-            case 'v':
-                fprintf(stdout, "mrroboto v0.1\n");
-                exit(0);
                 break;
             default:
                 break;

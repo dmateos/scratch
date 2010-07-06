@@ -7,6 +7,8 @@
 #include "irc.h"
 #include "irc_send.h"
 
+privmsg_cbt privmsg_cb = NULL;
+
 /* Handler functions, parse commands broken up by the main parser. */
 static void handle_ping(connection_t *connection, ircdata_t *data) {
     char cmdstr[DEFBUFFSIZE];
@@ -52,10 +54,7 @@ static void handle_privmsg(connection_t *connection, ircdata_t *data) {
     /* Now we can do stuff with the data finally! */
     fprintf(stderr, "\tpm from %s(%s)\n\tto %s\n\t%s\n", from, fromhost, to, msg);
 
-    if(ischan(to))
-        send_mesg(connection, to, msg); //channel echo!
-    else 
-        send_mesg(connection, from, msg); //echo!
+    if(privmsg_cb) privmsg_cb(connection, to, from , fromhost, msg);
 }
 
 static void handle_notice(connection_t *connection, ircdata_t *data) {

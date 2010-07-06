@@ -35,5 +35,8 @@ typedef struct IRC_DATA_S {
     char *params;
 } ircdata_t;
 
+typedef void(*privmsg_cbt)(connection_t *connection, char *to, char *from, char *fromhost, char *msg);
+extern privmsg_cbt privmsg_cb;
+
 void irc_parser(connection_t *connection, char *msg);
 #endif
