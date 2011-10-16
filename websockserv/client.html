@@ -1,0 +1,51 @@
+<html>
+	<script type="text/javascript" 
+		src="http://code.jquery.com/jquery-latest.pack.js">
+	</script>
+	<script>
+		$(document).ready(function() {
+			function debug(str) {
+				$("#debug").append(str + "<br/>");
+			};
+
+			if ("WebSocket" in window) {
+				var server = "ws://localhost:8080";
+				debug("connecting to " + server);
+				var socket = new WebSocket(server);
+
+				sendfrominputbox = function() {
+					var message = $("#input").val();
+					socket.send(message);
+					$("#input").val("");
+				};
+
+				socket.onopen = function() {
+					debug("connected");
+				};
+
+				socket.onmessage = function(message) {
+					debug(message.data);
+				};
+
+				socket.onclose = function() {
+					debug("connection died");
+				};
+
+				socket.onerror = function() {
+					debug("error");
+				};
+			}
+			else {
+				debug("browser doesnt support websockets");
+			}
+		});
+	</script>
+	<head>
+		<title></title>
+	</head>
+	<body>
+		<div id="debug">
+		</div>
+		<input id="input" onchange="sendfrominputbox()" size="42"></input>
+	</body>
+</html>
