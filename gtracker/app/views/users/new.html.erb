@@ -1,0 +1,18 @@
+<h1> Signup </h1>
+<%= form_for(@user) do |f| %>
+  <%= render 'shared/error_messages' %>
+  <div class="field">
+    <%= f.label :name %>
+    <%= f.text_field :name %>
+  </div>
+  <div class="field">
+    <%= f.label :email %>
+    <%= f.text_field :email %>
+  </div>
+  <div class="field">
+    <%= f.label :password %>
+    <%= f.password_field :password %>
+  <div class="actions">
+    <input id="user_submit" name="commit" type="submit" value="Sign up"/>
+  </div>
+<% end %>

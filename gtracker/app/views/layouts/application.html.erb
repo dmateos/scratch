@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gtracker</title>
+  <%= stylesheet_link_tag :all %>
+  <%= javascript_include_tag :defaults %>
+  <%= csrf_meta_tag %>
+</head>
+<body>
+
+<div id="logo_container">
+  <div id="logo_header">
+      <%= image_tag("gtrack-logo.png", :alt => "logo", :width => "100%") %>
+  </div>
+</div>
+
+<div id="main">
+  <% flash.each do |key, value| %>
+    <div class="flash_<%=key%>"><%= value %>"</div>
+  <% end %>
+
+    <div id="sidebar">
+    <% if !signed_in? %>
+      <p> Sign in </p>
+    <!-- todo partial --!>
+      <%= form_for(:session, :url => sessions_path) do |f| %>
+        <div class="field">
+          <%= f.label :email %><br/>
+          <%= f.text_field :email %>
+        </div>
+        <div class="field">
+          <%= f.label :password %><br/>
+          <%= f.password_field :password %><br/>
+        </div>
+        <div class="actions">
+          <input id="session_submit" name="commit" type="submit" value="Sign in"/>
+        </div>
+      <% end %>
+    <% else %>
+      <%= current_user.name %>
+       <p> Devices: </p>
+       <p><%= link_to("sign out", signout_path) %></p>
+    <% end %>
+  </div>
+
+  <%= yield %>
+  <!-- <%= debug(params) if Rails.env.development? %> -->
+  <div id="footer">
+    (c) Mateos Consulting
+  </div>
+</div>
+</body>
+
+</html>

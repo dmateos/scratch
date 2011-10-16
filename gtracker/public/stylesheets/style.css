@@ -1,0 +1,89 @@
+html {
+}
+
+body {
+  font-family: “Tahoma”, Geneva, sans-serif;
+  font-size: 14px;
+}
+
+h1 { 
+  font-size: 20px;
+}
+
+a, a:visited {
+  color: #000000;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+div#logo_container {
+  margin: 0 auto;
+  background-color: #2a4480;
+}
+
+div#logo_header {
+  margin: 0 auto;
+  background-color: #2a4480;
+  padding: 5px;
+  width: 500px;
+}
+
+div#main {
+}
+
+div.main_content {
+  color: #000000;
+  padding-left: 10px;
+  padding-top: 10px;
+}
+
+div#sidebar {
+  position: absolute;
+  right: 0px;
+  height: 580px;
+  width: 180px;
+  padding-left: 5px;
+  padding-top: 10px;
+  background-color: #6c8cd5;
+  font-size: 15px;
+  border-radius: 15px;
+  margin: 10px;
+  -moz-border-radius: 15px;
+}
+
+div#main {
+}
+
+div.main_points {
+  margin: 0 auto;
+  margin-bottom: 30px;
+  background-color: #6c8cd5;
+  padding: 10px;
+  width: 55%;
+  border-radius: 15px;
+  -moz-border-radius: 15px;
+}
+
+div.main_points_button {
+  margin: 0 auto;
+  margin-bottom: 30px;
+  background-color: #ff9640;
+  padding: 10px;
+  width: 100px;
+  border-radius: 15px;
+  -moz-border-radius: 15px;
+  text-align: center;
+}
+
+div#footer {
+  text-align: center;
+  font-size: 8px;
+  height: 12px
+}
