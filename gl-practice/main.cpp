@@ -2,6 +2,42 @@
 
 using namespace std;
 
+GLuint make_shader(const char *path, GLenum stype) {
+	int length;
+	GLchar *data = (GLchar*)file_contents(path, &length);
+	GLint shader_ok;
+	GLuint shader = glCreateShader(stype);
+
+	glShaderSource(shader, 1, (const GLchar**)&data, &length);
+	glCompileShader(shader);
+
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
+	if(!shader_ok) {
+		printf("shader %s did not compile\n", path);
+		glDeleteShader(shader);
+		return 1;
+	}
+
+	free(data);
+	return shader;
+}
+
+GLint make_program(GLint vshader, GLint fshader) {
+	GLint shader_program = glCreateProgram();
+	glAttachShader(shader_program, vshader);
+	glAttachShader(shader_program, fshader);
+	glLinkProgram(shader_program);
+
+	GLint program_ok;
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &program_ok);
+	if(!program_ok) {
+		printf("program did not compile\n");
+		return 1;
+	}
+
+	return shader_program;
+}
+
 int main(int argc, char **argv) {
 	if(!glfwInit()) {
 		fprintf(stderr, "error: could not start glfw3\n");
@@ -33,11 +69,53 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	float points[] = {
+	GLfloat points[] = {
 		0.0f, 0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
 		-0.5f, -0.5f, 0.0f
 	};
+
+	GLfloat colours[] = {
+	  1.0f, 0.0f,  0.0f,
+	  0.0f, 1.0f,  0.0f,
+	  0.0f, 0.0f,  1.0f
+	};
+
+	GLuint points_vbo = 0;
+	glGenBuffers(1, &points_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(float), points, GL_STATIC_DRAW);
+
+	GLuint colors_vbo = 0;
+	glGenBuffers(1, &colors_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(float), colours, GL_STATIC_DRAW);
+
+	GLuint vao = 0;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
+	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
+	GLint shader_program = make_program(vshader, fshader);
+
+	while(!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glUseProgram(shader_program);
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
 
 	glfwTerminate();
 	return 0;

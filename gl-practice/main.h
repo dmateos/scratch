@@ -3,7 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <iostream>
+
+#include "util.h"
 
 #include <GL/glew.h>
 #define GLFW_DLL
