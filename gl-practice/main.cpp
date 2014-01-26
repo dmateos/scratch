@@ -38,6 +38,14 @@ GLint make_program(GLint vshader, GLint fshader) {
 	return shader_program;
 }
 
+GLint make_buffer(void *data, int size, GLenum type) {
+	GLuint vbo = 0;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, size, data, type);
+	return vbo;
+}
+
 int main(int argc, char **argv) {
 	if(!glfwInit()) {
 		fprintf(stderr, "error: could not start glfw3\n");
@@ -81,15 +89,8 @@ int main(int argc, char **argv) {
 	  0.0f, 0.0f,  1.0f
 	};
 
-	GLuint points_vbo = 0;
-	glGenBuffers(1, &points_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(float), points, GL_STATIC_DRAW);
-
-	GLuint colors_vbo = 0;
-	glGenBuffers(1, &colors_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
-	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(float), colours, GL_STATIC_DRAW);
+	GLuint points_vbo = make_buffer(points, 9*sizeof(GLfloat), GL_STATIC_DRAW);
+	GLuint colors_vbo = make_buffer(colours, 9*sizeof(GLfloat), GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
