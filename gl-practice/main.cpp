@@ -84,9 +84,9 @@ int main(int argc, char **argv) {
 	};
 
 	GLfloat colours[] = {
-	  1.0f, 0.0f,  0.0f,
-	  0.0f, 1.0f,  0.0f,
-	  0.0f, 0.0f,  1.0f,
+		1.0f, 0.0f,  0.0f,
+		0.0f, 1.0f,  0.0f,
+		0.0f, 0.0f,  1.0f,
 	};
 
 	GLuint points_vbo = make_buffer(points, 9*sizeof(GLfloat), GL_STATIC_DRAW);
