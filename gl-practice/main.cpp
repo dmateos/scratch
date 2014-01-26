@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
 	GLfloat colours[] = {
 	  1.0f, 0.0f,  0.0f,
 	  0.0f, 1.0f,  0.0f,
-	  0.0f, 0.0f,  1.0f
+	  0.0f, 0.0f,  1.0f,
 	};
 
 	GLuint points_vbo = make_buffer(points, 9*sizeof(GLfloat), GL_STATIC_DRAW);
@@ -110,7 +110,12 @@ int main(int argc, char **argv) {
 	while(!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+		GLint transform_location = glGetUniformLocation(shader_program, "transform");
 		glUseProgram(shader_program);
+		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(translate));
+
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
