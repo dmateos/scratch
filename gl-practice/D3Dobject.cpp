@@ -1,14 +1,10 @@
-#include "mesh_import.h"
+#include "D3DObject.h"
 
-using namespace std;
-
-
-unsigned int load_mesh(const char *file_name, vector<float> *g_vp, vector<float> *g_vt, vector<float> *g_vn) {
-	const aiScene *scene = aiImportFile(file_name, aiProcess_Triangulate | aiProcess_MakeLeftHanded);
+D3DObject::D3DObject(std::string file_name) {
+	const aiScene *scene = aiImportFile(file_name.c_str(), aiProcess_Triangulate | aiProcess_MakeLeftHanded);
 	unsigned int g_point_count = 0;
 	if(!scene) {
-		fprintf(stderr, "error reading mesh %s\n", file_name);
-		return -1;
+		fprintf(stderr, "error reading mesh %s\n", file_name.c_str());
 	}
 
 	printf("%i animations\n", scene->mNumAnimations);
@@ -27,28 +23,28 @@ unsigned int load_mesh(const char *file_name, vector<float> *g_vp, vector<float>
 			if(mesh->HasPositions()) {
 				const aiVector3D *vp = &(mesh->mVertices[vi]);
 				printf ("vp %i (%f,%f,%f)\n", vi, vp->x, vp->y, vp->z);
-				g_vp->push_back(vp->x);
-				g_vp->push_back(vp->y);
-				g_vp->push_back(vp->z);
+				this->verticies.push_back(vp->x);
+				this->verticies.push_back(vp->y);
+				this->verticies.push_back(vp->z);
 			}
 			if(mesh->HasNormals()) {
 				const aiVector3D *vn = &(mesh->mNormals[vi]);
 				printf("vn %i (%f,%f,%f)\n", vi, vn->x, vn->y, vn->z);
-				g_vn->push_back(vn->x);
-				g_vn->push_back(vn->y);
-				g_vn->push_back(vn->z);
+				this->normals.push_back(vn->x);
+				this->normals.push_back(vn->y);
+				this->normals.push_back(vn->z);
 			}
 			if(mesh->HasTextureCoords(0)) {
 				const aiVector3D* vt = &(mesh->mTextureCoords[0][vi]);
 				printf("vt %i (%f, %f)\n", vi, vt->x, vt->y);
-				g_vt->push_back(vt->x);
-				g_vt->push_back(vt->y);
+				this->textures.push_back(vt->x);
+				this->textures.push_back(vt->y);
 			}
 			if(mesh->HasTangentsAndBitangents()) {
 
 			}
 		}
 	}
+	this->verticies_count = g_point_count;
 	aiReleaseImport(scene);
-	return g_point_count;
 }

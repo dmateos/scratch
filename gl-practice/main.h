@@ -6,7 +6,7 @@
 #include <iostream>
 
 #include "util.h"
-#include "mesh_import.h"
+#include "D3DObject.h"
 
 #include <GL/glew.h>
 #define GLFW_DLL

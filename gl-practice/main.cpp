@@ -77,11 +77,10 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	std::vector<float> g_vp, g_vt, g_vn;
-	int g_point_count = load_mesh(argv[1], &g_vp, &g_vt, &g_vn);
+	D3DObject mesh(argv[1]);
 
-	GLuint points_vbo = make_buffer(&g_vp[0], g_point_count * 3 * sizeof(float), GL_STATIC_DRAW);
-	GLuint normals_vbo = make_buffer(&g_vn[0], g_point_count * 3 * sizeof(float), GL_STATIC_DRAW);
+	GLuint points_vbo = make_buffer(&mesh.verticies[0], mesh.verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
+	GLuint normals_vbo = make_buffer(&mesh.normals[0], mesh.verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
@@ -119,7 +118,7 @@ int main(int argc, char **argv) {
 		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate));
 
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, g_point_count);
+		glDrawArrays(GL_TRIANGLES, 0, mesh.verticies_count);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
