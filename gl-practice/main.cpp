@@ -77,33 +77,18 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	GLfloat points[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f,
-		1.0f,  1.0f, 0.0f,
-	};
+	std::vector<float> g_vp, g_vt, g_vn;
+	int g_point_count = load_mesh("meshes/cube.dae", &g_vp, &g_vt, &g_vn);
 
-	GLfloat colours[] = {
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-		0.5f, 0.5f, 0.5f,
-	};
-
-	GLuint points_vbo = make_buffer(points, 12*sizeof(GLfloat), GL_STATIC_DRAW);
-	GLuint colors_vbo = make_buffer(colours, 12*sizeof(GLfloat), GL_STATIC_DRAW);
+	GLuint points_vbo = make_buffer(&g_vp[0], g_point_count * 3 * sizeof(float), GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
 
 	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
 	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
@@ -130,7 +115,7 @@ int main(int argc, char **argv) {
 		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate));
 
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDrawArrays(GL_TRIANGLES, 0, g_point_count);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

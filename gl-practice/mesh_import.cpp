@@ -2,14 +2,13 @@
 
 using namespace std;
 
-vector<float> g_vp, g_vt, g_vn;
-int g_point_count = 0;
 
-bool load_mesh(const char *file_name) {
+unsigned int load_mesh(const char *file_name, vector<float> *g_vp, vector<float> *g_vt, vector<float> *g_vn) {
 	const aiScene *scene = aiImportFile(file_name, aiProcess_Triangulate);
+	unsigned int g_point_count = 0;
 	if(!scene) {
 		fprintf(stderr, "error reading mesh %s\n", file_name);
-		return false;
+		return -1;
 	}
 
 	printf("%i animations\n", scene->mNumAnimations);
@@ -28,27 +27,28 @@ bool load_mesh(const char *file_name) {
 			if(mesh->HasPositions()) {
 				const aiVector3D *vp = &(mesh->mVertices[vi]);
 				printf ("vp %i (%f,%f,%f)\n", vi, vp->x, vp->y, vp->z);
-				g_vp.push_back(vp->x);
-				g_vp.push_back(vp->y);
-				g_vp.push_back(vp->z);
+				g_vp->push_back(vp->x);
+				g_vp->push_back(vp->y);
+				g_vp->push_back(vp->z);
 			}
 			if(mesh->HasNormals()) {
 				const aiVector3D *vn = &(mesh->mNormals[vi]);
 				printf("vn %i (%f,%f,%f)\n", vi, vn->x, vn->y, vn->z);
-				g_vn.push_back(vn->x);
-				g_vn.push_back(vn->y);
-				g_vn.push_back(vn->z);
+				g_vn->push_back(vn->x);
+				g_vn->push_back(vn->y);
+				g_vn->push_back(vn->z);
 			}
 			if(mesh->HasTextureCoords(0)) {
 				const aiVector3D* vt = &(mesh->mTextureCoords[0][vi]);
 				printf("vt %i (%f, %f)\n", vi, vt->x, vt->y);
-				g_vt.push_back(vt->x);
-				g_vt.push_back(vt->y);
+				g_vt->push_back(vt->x);
+				g_vt->push_back(vt->y);
 			}
 			if(mesh->HasTangentsAndBitangents()) {
 
 			}
 		}
 	}
-	return true;
+	aiReleaseImport(scene);
+	return g_point_count;
 }
