@@ -111,13 +111,12 @@ int main(int argc, char **argv) {
 	    );
 
 		glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(cos(count*0.001f), 0.0f, 3.0+sin(count*0.001f)));
-		glm::mat4 rotate_around = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), count*0.1f, glm::vec3(0.0f, 0.5f, 0.0f));
 		count += 10;
 
 		GLint transform_location = glGetUniformLocation(shader_program, "transform");
 		glUseProgram(shader_program);
-		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate * rotate_around));
+		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate));
 
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, g_point_count);

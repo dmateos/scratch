@@ -4,7 +4,7 @@ using namespace std;
 
 
 unsigned int load_mesh(const char *file_name, vector<float> *g_vp, vector<float> *g_vt, vector<float> *g_vn) {
-	const aiScene *scene = aiImportFile(file_name, aiProcess_Triangulate);
+	const aiScene *scene = aiImportFile(file_name, aiProcess_Triangulate | aiProcess_MakeLeftHanded);
 	unsigned int g_point_count = 0;
 	if(!scene) {
 		fprintf(stderr, "error reading mesh %s\n", file_name);
