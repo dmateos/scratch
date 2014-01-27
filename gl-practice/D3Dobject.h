@@ -9,8 +9,6 @@
 #include <string>
 #include <stdio.h>
 
-using namespace std;
-
 class D3DObject {
 	public:
 		std::vector<float> verticies, textures, normals;
