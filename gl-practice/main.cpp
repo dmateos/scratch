@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow *window = glfwCreateWindow(640, 480, "Hello world", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(1024, 768, "Hello world", NULL, NULL);
 
 	if(!window) {
 		fprintf(stderr, "erorr: could not open window with glfw3\n");
@@ -78,19 +78,21 @@ int main(int argc, char **argv) {
 	glDepthFunc(GL_LESS);
 
 	GLfloat points[] = {
-		0.0f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		1.0f,  1.0f, 0.0f,
 	};
 
 	GLfloat colours[] = {
-		1.0f, 0.0f,  0.0f,
-		0.0f, 1.0f,  0.0f,
-		0.0f, 0.0f,  1.0f,
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+		0.5f, 0.5f, 0.5f,
 	};
 
-	GLuint points_vbo = make_buffer(points, 9*sizeof(GLfloat), GL_STATIC_DRAW);
-	GLuint colors_vbo = make_buffer(colours, 9*sizeof(GLfloat), GL_STATIC_DRAW);
+	GLuint points_vbo = make_buffer(points, 12*sizeof(GLfloat), GL_STATIC_DRAW);
+	GLuint colors_vbo = make_buffer(colours, 12*sizeof(GLfloat), GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
@@ -107,17 +109,28 @@ int main(int argc, char **argv) {
 	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
 	GLint shader_program = make_program(vshader, fshader);
 
+	int count = 0;
 	while(!glfwWindowShouldClose(window)) {
+		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		glm::mat4 projection = glm::mat4(
+			glm::vec4(3.0/4.0f, 0.0f, 0.0f, 0.0f),
+			glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+			glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
+			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+	    );
+
+		glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(cos(count*0.001f), 0.0f, 3.0+sin(count*0.001f)));
+		glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), count*0.1f, glm::vec3(0.5f, 0.0f, 0.0f));
+		count += 10;
 
 		GLint transform_location = glGetUniformLocation(shader_program, "transform");
 		glUseProgram(shader_program);
-		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(translate));
+		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate));
 
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

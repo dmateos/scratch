@@ -41,5 +41,5 @@ void main()
 		vec4(cos(timer),   0.0,   3.0+sin(timer),   1.0)
 	);
 
-	gl_Position = projection * move * rotation * scale_aspect  * position;
+	gl_Position = projection * move * rotation * position;
 }
