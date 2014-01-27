@@ -78,17 +78,21 @@ int main(int argc, char **argv) {
 	glDepthFunc(GL_LESS);
 
 	std::vector<float> g_vp, g_vt, g_vn;
-	int g_point_count = load_mesh("meshes/cube.dae", &g_vp, &g_vt, &g_vn);
+	int g_point_count = load_mesh(argv[1], &g_vp, &g_vt, &g_vn);
 
 	GLuint points_vbo = make_buffer(&g_vp[0], g_point_count * 3 * sizeof(float), GL_STATIC_DRAW);
+	GLuint normals_vbo = make_buffer(&g_vn[0], g_point_count * 3 * sizeof(float), GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, normals_vbo);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
 	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
@@ -107,12 +111,13 @@ int main(int argc, char **argv) {
 	    );
 
 		glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(cos(count*0.001f), 0.0f, 3.0+sin(count*0.001f)));
-		glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), count*0.1f, glm::vec3(0.5f, 0.0f, 0.0f));
+		glm::mat4 rotate_around = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), count*0.1f, glm::vec3(0.0f, 0.5f, 0.0f));
 		count += 10;
 
 		GLint transform_location = glGetUniformLocation(shader_program, "transform");
 		glUseProgram(shader_program);
-		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate));
+		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate * rotate_around));
 
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, g_point_count);
