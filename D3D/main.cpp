@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 			glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
 			glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
 			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
-	    );
+		);
 
 		obj1.update_coord_x(x);
 		obj1.update_coord_y(y);
