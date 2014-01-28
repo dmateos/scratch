@@ -1,5 +1,8 @@
 #include "D3DObject.h"
 
+//
+// D3DObject
+//
 D3DObject::D3DObject(std::string file_name) {
 	const aiScene *scene = aiImportFile(file_name.c_str(), aiProcess_Triangulate | aiProcess_MakeLeftHanded);
 	unsigned int g_point_count = 0;
@@ -47,4 +50,31 @@ D3DObject::D3DObject(std::string file_name) {
 	}
 	this->verticies_count = g_point_count;
 	aiReleaseImport(scene);
+}
+
+//
+// D3DWorldObject
+//
+D3DWorldObject::D3DWorldObject(std::string model_filepath, float x, float y, float z) {
+	mesh = new D3DObject(model_filepath);
+	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+}
+
+D3DWorldObject::~D3DWorldObject() {
+	delete mesh;
+}
+
+void D3DWorldObject::update_coord_x(float val) {
+	this->x = val;
+	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
+}
+
+void D3DWorldObject::update_coord_y(float val) {
+	this->y = val;
+	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
+}
+
+void D3DWorldObject::update_coord_z(float val) {
+	this->z = val;
+	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
 }

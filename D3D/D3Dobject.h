@@ -5,6 +5,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <vector>
 #include <string>
 #include <stdio.h>
@@ -15,6 +19,20 @@ class D3DObject {
 		int verticies_count;
 
 		D3DObject(std::string filename);
+};
+
+class D3DWorldObject {
+	public:
+		float x, y, z;
+		glm::mat4 transform_matrix;
+		D3DObject *mesh;
+
+		D3DWorldObject(std::string model_filepath, float x, float y, float z); 
+		~D3DWorldObject();
+
+		void update_coord_x(float val);
+		void update_coord_y(float val);
+		void update_coord_z(float val);
 };
 
 #endif

@@ -46,6 +46,24 @@ GLint make_buffer(void *data, int size, GLenum type) {
 	return vbo;
 }
 
+float x,y,z;
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	switch(key) {
+		case GLFW_KEY_DOWN:
+			z -= 0.1;
+			break;
+		case GLFW_KEY_UP:
+			z += 0.1;
+			break;
+		case GLFW_KEY_LEFT:
+			x += 0.1;
+			break;
+		case GLFW_KEY_RIGHT:
+			x -= 0.1;
+			break;
+	}
+}
+
 int main(int argc, char **argv) {
 	if(!glfwInit()) {
 		fprintf(stderr, "error: could not start glfw3\n");
@@ -58,6 +76,8 @@ int main(int argc, char **argv) {
 	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	GLFWwindow *window = glfwCreateWindow(1024, 768, "Hello world", NULL, NULL);
+	glfwSetKeyCallback(window, key_callback);
+
 
 	if(!window) {
 		fprintf(stderr, "erorr: could not open window with glfw3\n");
@@ -77,10 +97,10 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	D3DObject mesh(argv[1]);
+	D3DWorldObject obj1(argv[1], 0.0f, 0.0f, 0.7f);
 
-	GLuint points_vbo = make_buffer(&mesh.verticies[0], mesh.verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
-	GLuint normals_vbo = make_buffer(&mesh.normals[0], mesh.verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
+	GLuint points_vbo = make_buffer(&obj1.mesh->verticies[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
+	GLuint normals_vbo = make_buffer(&obj1.mesh->normals[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
@@ -109,16 +129,16 @@ int main(int argc, char **argv) {
 			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
 	    );
 
-		glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(cos(count*0.001f), 0.0f, 3.0+sin(count*0.001f)));
-		glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), count*0.1f, glm::vec3(0.0f, 0.5f, 0.0f));
-		count += 10;
+		obj1.update_coord_x(x);
+		obj1.update_coord_y(y);
+		obj1.update_coord_z(z);
 
 		GLint transform_location = glGetUniformLocation(shader_program, "transform");
 		glUseProgram(shader_program);
-		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * translate * rotate));
+		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * obj1.transform_matrix));
 
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, mesh.verticies_count);
+		glDrawArrays(GL_TRIANGLES, 0, obj1.mesh->verticies_count);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
