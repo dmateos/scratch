@@ -101,6 +101,10 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
+	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
+	GLint shader_program = make_program(vshader, fshader);
+
 	D3DWorldObject obj1(argv[1], 0.0f, 0.0f, 10.0f);
 
 	GLuint points_vbo = make_buffer(&obj1.mesh->verticies[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
@@ -117,21 +121,16 @@ int main(int argc, char **argv) {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
-	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
-	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
-	GLint shader_program = make_program(vshader, fshader);
+	glm::mat4 projection = glm::mat4(
+		glm::vec4(3.0/4.0f, 0.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
+		glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
 
-	int count = 0;
 	while(!glfwWindowShouldClose(window)) {
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glm::mat4 projection = glm::mat4(
-			glm::vec4(3.0/4.0f, 0.0f, 0.0f, 0.0f),
-			glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
-			glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
-			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
-		);
 
 		obj1.update_coord_x(x);
 		obj1.update_coord_y(y);
