@@ -50,15 +50,19 @@ float x,y,z;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	switch(key) {
 		case GLFW_KEY_DOWN:
+		case GLFW_KEY_S:
 			z -= 0.1;
 			break;
 		case GLFW_KEY_UP:
+		case GLFW_KEY_W:
 			z += 0.1;
 			break;
 		case GLFW_KEY_LEFT:
+		case GLFW_KEY_A:
 			x += 0.1;
 			break;
 		case GLFW_KEY_RIGHT:
+		case GLFW_KEY_D:
 			x -= 0.1;
 			break;
 	}
@@ -97,7 +101,7 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	D3DWorldObject obj1(argv[1], 0.0f, 0.0f, 0.7f);
+	D3DWorldObject obj1(argv[1], 0.0f, 0.0f, 10.0f);
 
 	GLuint points_vbo = make_buffer(&obj1.mesh->verticies[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
 	GLuint normals_vbo = make_buffer(&obj1.mesh->normals[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
