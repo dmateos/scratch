@@ -102,12 +102,14 @@ int main(int argc, char **argv) {
 	D3DWorldObject obj3("meshes/torus.dae", -3.0f, 0.0f, 5.0f);
 	D3DWorldObject obj4("meshes/torus.dae", 3.0f, 0.0f, 5.0f);
 
-	glm::mat4 projection = glm::mat4(
-		glm::vec4(3.0/4.0f, 0.0f, 0.0f, 0.0f),
-		glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
-		glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
-		glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+	glm::mat4 projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	glm::mat4 view       = glm::lookAt(
+		glm::vec3(0.0f ,0.0f, -5.0f), // Camera is at (4,3,3), in World Space
+		glm::vec3(0.0f,0.0f,0.0f), // and looks at the origin
+		glm::vec3(0.0f,1.0f,0.0f)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
+
+	glm::mat4 vp = projection * view;
 
 	while(!glfwWindowShouldClose(window)) {
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -117,10 +119,10 @@ int main(int argc, char **argv) {
 		obj1.update_coord_y(y);
 		obj1.update_coord_z(z);
 
-		obj1.draw(shader_program, projection);
-		obj2.draw(shader_program, projection);
-		obj3.draw(shader_program, projection);
-		obj4.draw(shader_program, projection);
+		obj1.draw(shader_program, vp);
+		obj2.draw(shader_program, vp);
+		obj3.draw(shader_program, vp);
+		obj4.draw(shader_program, vp);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
