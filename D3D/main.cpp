@@ -38,24 +38,32 @@ GLint make_program(GLint vshader, GLint fshader) {
 	return shader_program;
 }
 
-float x,y,z;
+float x,y,z, xc, yc, zc;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	switch(key) {
 		case GLFW_KEY_DOWN:
-		case GLFW_KEY_S:
 			z -= 0.1;
 			break;
 		case GLFW_KEY_UP:
-		case GLFW_KEY_W:
 			z += 0.1;
 			break;
 		case GLFW_KEY_LEFT:
-		case GLFW_KEY_A:
 			x -= 0.1;
 			break;
 		case GLFW_KEY_RIGHT:
-		case GLFW_KEY_D:
 			x += 0.1;
+			break;
+		case GLFW_KEY_S:
+			zc -= 0.1;
+			break;
+		case GLFW_KEY_W:
+			zc += 0.1;
+			break;
+		case GLFW_KEY_A:
+			xc -= 0.1;
+			break;
+		case GLFW_KEY_D:
+			xc += 0.1;
 			break;
 	}
 }
@@ -102,17 +110,19 @@ int main(int argc, char **argv) {
 	D3DWorldObject obj4("meshes/torus.dae", 3.0f, 0.0f, 5.0f);
 
 	glm::mat4 projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
-	glm::mat4 view       = glm::lookAt(
-		glm::vec3(0.0f ,0.0f, -5.0f), // Camera is at (4,3,3), in World Space
-		glm::vec3(0.0f,0.0f,0.0f), // and looks at the origin
-		glm::vec3(0.0f,1.0f,0.0f)  // Head is up (set to 0,-1,0 to look upside-down)
-	);
 
-	glm::mat4 vp = projection * view;
 
 	while(!glfwWindowShouldClose(window)) {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glm::mat4 view       = glm::lookAt(
+			glm::vec3(xc ,yc, -5.0f), // Camera is at (4,3,3), in World Space
+			glm::vec3(0.0f,0.0f,0.0f), // and looks at the origin
+			glm::vec3(0.0f,1.0f,0.0f)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+
+		glm::mat4 vp = projection * view;
 
 		obj1.update_coord_x(x);
 		obj1.update_coord_y(y);
