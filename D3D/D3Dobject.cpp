@@ -59,10 +59,36 @@ D3DObject::D3DObject(std::string file_name) {
 D3DWorldObject::D3DWorldObject(std::string model_filepath, float x, float y, float z) {
 	mesh = new D3DObject(model_filepath);
 	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+
+	glGenBuffers(2, this->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->verticies[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->normals[0], GL_STATIC_DRAW);
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 }
 
 D3DWorldObject::~D3DWorldObject() {
 	delete mesh;
+}
+
+void D3DWorldObject::draw(GLuint shader_program, glm::mat4 projection) {
+	GLint transform = glGetUniformLocation(shader_program, "transform");
+	glUseProgram(shader_program);
+	glUniformMatrix4fv(transform, 1, GL_FALSE, glm::value_ptr(projection * this->transform_matrix));
+
+	glBindVertexArray(this->vao);
+	glDrawArrays(GL_TRIANGLES, 0, this->mesh->verticies_count);
+	glBindVertexArray(0);
 }
 
 void D3DWorldObject::update_coord_x(float val) {
@@ -80,20 +106,4 @@ void D3DWorldObject::update_coord_z(float val) {
 	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
 }
 
-void D3DWorldObject::draw() {
-	glGenBuffers(2, this->vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->verticies[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->normals[0], GL_STATIC_DRAW);
 
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-}

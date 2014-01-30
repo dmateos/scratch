@@ -38,14 +38,6 @@ GLint make_program(GLint vshader, GLint fshader) {
 	return shader_program;
 }
 
-GLint make_buffer(void *data, int size, GLenum type) {
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, size, data, type);
-	return vbo;
-}
-
 float x,y,z;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	switch(key) {
@@ -106,20 +98,9 @@ int main(int argc, char **argv) {
 	GLint shader_program = make_program(vshader, fshader);
 
 	D3DWorldObject obj1(argv[1], 0.0f, 0.0f, 10.0f);
-
-	GLuint points_vbo = make_buffer(&obj1.mesh->verticies[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
-	GLuint normals_vbo = make_buffer(&obj1.mesh->normals[0], obj1.mesh->verticies_count * 3 * sizeof(float), GL_STATIC_DRAW);
-
-	GLuint vao = 0;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glBindBuffer(GL_ARRAY_BUFFER, normals_vbo);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
+	D3DWorldObject obj2("meshes/torus.dae", 0.0f, 0.0f, 5.0f);
+	D3DWorldObject obj3("meshes/torus.dae", -3.0f, 0.0f, 5.0f);
+	D3DWorldObject obj4("meshes/torus.dae", 3.0f, 0.0f, 5.0f);
 
 	glm::mat4 projection = glm::mat4(
 		glm::vec4(3.0/4.0f, 0.0f, 0.0f, 0.0f),
@@ -136,14 +117,10 @@ int main(int argc, char **argv) {
 		obj1.update_coord_y(y);
 		obj1.update_coord_z(z);
 
-		printf("%f %f %f\n", x,y,z);
-
-		GLint transform_location = glGetUniformLocation(shader_program, "transform");
-		glUseProgram(shader_program);
-		glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(projection * obj1.transform_matrix));
-
-		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, obj1.mesh->verticies_count);
+		obj1.draw(shader_program, projection);
+		obj2.draw(shader_program, projection);
+		obj3.draw(shader_program, projection);
+		obj4.draw(shader_program, projection);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
