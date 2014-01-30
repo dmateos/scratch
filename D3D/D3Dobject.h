@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -26,6 +27,8 @@ class D3DWorldObject {
 		float x, y, z;
 		glm::mat4 transform_matrix;
 		D3DObject *mesh;
+		GLuint vbo[2];
+		GLuint vao;
 
 		D3DWorldObject(std::string model_filepath, float x, float y, float z); 
 		~D3DWorldObject();
@@ -33,6 +36,8 @@ class D3DWorldObject {
 		void update_coord_x(float val);
 		void update_coord_y(float val);
 		void update_coord_z(float val);
+
+		void draw();
 };
 
 #endif

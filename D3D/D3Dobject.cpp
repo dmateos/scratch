@@ -5,6 +5,7 @@
 //
 D3DObject::D3DObject(std::string file_name) {
 	const aiScene *scene = aiImportFile(file_name.c_str(), aiProcess_Triangulate | aiProcess_MakeLeftHanded);
+	//const aiScene *scene = aiImportFile(file_name.c_str(), aiProcess_Triangulate);
 	unsigned int g_point_count = 0;
 	if(!scene) {
 		fprintf(stderr, "error reading mesh %s\n", file_name.c_str());
@@ -77,4 +78,22 @@ void D3DWorldObject::update_coord_y(float val) {
 void D3DWorldObject::update_coord_z(float val) {
 	this->z = val;
 	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
+}
+
+void D3DWorldObject::draw() {
+	glGenBuffers(2, this->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->verticies[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->normals[0], GL_STATIC_DRAW);
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 }

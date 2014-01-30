@@ -59,11 +59,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 		case GLFW_KEY_LEFT:
 		case GLFW_KEY_A:
-			x += 0.1;
+			x -= 0.1;
 			break;
 		case GLFW_KEY_RIGHT:
 		case GLFW_KEY_D:
-			x -= 0.1;
+			x += 0.1;
 			break;
 	}
 }
@@ -135,6 +135,8 @@ int main(int argc, char **argv) {
 		obj1.update_coord_x(x);
 		obj1.update_coord_y(y);
 		obj1.update_coord_z(z);
+
+		printf("%f %f %f\n", x,y,z);
 
 		GLint transform_location = glGetUniformLocation(shader_program, "transform");
 		glUseProgram(shader_program);
