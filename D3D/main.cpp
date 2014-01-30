@@ -74,7 +74,6 @@ int main(int argc, char **argv) {
 	GLFWwindow *window = glfwCreateWindow(1024, 768, "Hello world", NULL, NULL);
 	glfwSetKeyCallback(window, key_callback);
 
-
 	if(!window) {
 		fprintf(stderr, "erorr: could not open window with glfw3\n");
 		return 1;
@@ -112,7 +111,7 @@ int main(int argc, char **argv) {
 	glm::mat4 vp = projection * view;
 
 	while(!glfwWindowShouldClose(window)) {
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		obj1.update_coord_x(x);
