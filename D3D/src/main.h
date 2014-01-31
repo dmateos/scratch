@@ -7,6 +7,7 @@
 
 #include "util.h"
 #include "D3DObject.h"
+#include "network.h"
 
 #include <GL/glew.h>
 #define GLFW_DLL

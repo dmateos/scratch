@@ -2,6 +2,7 @@
 
 using namespace std;
 
+// Sets the FPS text on a glfwindow
 void _update_fps_counter (GLFWwindow* window) {
 	static double previous_seconds = glfwGetTime ();
 	static int frame_count;
@@ -18,6 +19,7 @@ void _update_fps_counter (GLFWwindow* window) {
 	frame_count++;
 }
 
+//Compiles a GLSL shader from a source file
 GLuint make_shader(const char *path, GLenum stype) {
 	int length;
 	GLchar *data = (GLchar*)file_contents(path, &length);
@@ -38,6 +40,7 @@ GLuint make_shader(const char *path, GLenum stype) {
 	return shader;
 }
 
+//Makes a gl program out of the given shader programs
 GLint make_program(GLint vshader, GLint fshader) {
 	GLint shader_program = glCreateProgram();
 	glAttachShader(shader_program, vshader);
@@ -54,10 +57,11 @@ GLint make_program(GLint vshader, GLint fshader) {
 	return shader_program;
 }
 
+//Store some persistant global variables other functions need access too
 std::vector<D3DWorldObject*> bullets;
 D3DWorldObject *playerptr;
-
 float x,y,z, xc, yc, zc;
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	switch(key) {
 		case GLFW_KEY_W:
@@ -91,7 +95,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			y -= 0.1;
 			break;
 		case GLFW_KEY_SPACE:
-			bullets.push_back(new D3DWorldObject("meshes/circle.dae", playerptr->get_x(), playerptr->get_y(), playerptr->get_z()));
+			bullets.push_back(new D3DWorldObject("meshes/circle.dae",
+								playerptr->get_x(),
+								playerptr->get_y(),
+								playerptr->get_z()));
 			break;
 	}
 }
@@ -102,32 +109,37 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	// Lets try to tell the Operating System what version of openGL we like
 	glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	// Make a window and some more gl init stuff.
 	GLFWwindow *window = glfwCreateWindow(1024, 768, "Hello world", NULL, NULL);
-	glfwSetKeyCallback(window, key_callback);
-
 	if(!window) {
 		fprintf(stderr, "erorr: could not open window with glfw3\n");
 		return 1;
 	}
 
+	glfwSetKeyCallback(window, key_callback);
 	glfwMakeContextCurrent(window);
 
 	glewExperimental = GL_TRUE;
 	glewInit();
 
+	//Enable the opengl depth buffers for 3d.
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	// Lets print the version of opengl
 	const GLubyte* renderer = glGetString (GL_RENDERER);
 	const GLubyte* version = glGetString (GL_VERSION);
 	printf("Renderer: %s\n", renderer);
 	printf ("OpenGL version supported %s\n", version);
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
+	//Compile our vertex and fragment shader and setup a 
+	//perspective matrix (the lense of the camera)
 	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
 	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
 	GLint shader_program = make_program(vshader, fshader);
@@ -145,6 +157,7 @@ int main(int argc, char **argv) {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//This is our camera position matrix
 		glm::mat4 view = glm::lookAt(
 			glm::vec3(xc ,zc, +10.0f), // Camera is at (4,3,3), in World Space
 			glm::vec3(0.0f,0.0f,0.0f), // and looks at the origin
@@ -153,10 +166,12 @@ int main(int argc, char **argv) {
 
 		glm::mat4 vp = projection * view;
 
+		//Update the coords of our main charecter
 		player.update_coord_x(x);
 		player.update_coord_y(y);
 		player.update_coord_z(z);
 
+		//Render
 		player.draw(shader_program, vp);
 		obj2.draw(shader_program, vp);
 		obj3.draw(shader_program, vp);

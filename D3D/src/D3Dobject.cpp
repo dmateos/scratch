@@ -60,18 +60,20 @@ D3DWorldObject::D3DWorldObject(std::string model_filepath, float x, float y, flo
 	mesh = new D3DObject(model_filepath);
 	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
 
+	//Generate a new buffer for our mesh and the normals for some kind of lightning 
 	glGenBuffers(2, this->vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->verticies[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, this->vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, this->mesh->verticies_count * 3 * sizeof(float), &this->mesh->normals[0], GL_STATIC_DRAW);
 
+	//Make a vertex attrib object to give to opengl when we want to render our above buffer
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); //This is our vertex's
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL); //This sets our normals.
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -86,10 +88,13 @@ D3DWorldObject::~D3DWorldObject() {
 }
 
 void D3DWorldObject::draw(GLuint shader_program, glm::mat4 projection) {
+	//We pass our transformation matrix to the shader each render, this is
+	//what we use to position our mesh in world space.
 	GLint transform = glGetUniformLocation(shader_program, "transform");
 	glUseProgram(shader_program);
 	glUniformMatrix4fv(transform, 1, GL_FALSE, glm::value_ptr(projection * this->transform_matrix));
 
+	//Draw baby!
 	glBindVertexArray(this->vao);
 	glDrawArrays(GL_TRIANGLES, 0, this->mesh->verticies_count);
 	glBindVertexArray(0);
