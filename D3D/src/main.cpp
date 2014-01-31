@@ -54,6 +54,9 @@ GLint make_program(GLint vshader, GLint fshader) {
 	return shader_program;
 }
 
+std::vector<D3DWorldObject*> bullets;
+D3DWorldObject *playerptr;
+
 float x,y,z, xc, yc, zc;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	switch(key) {
@@ -86,6 +89,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 		case GLFW_KEY_Q:
 			y -= 0.1;
+			break;
+		case GLFW_KEY_SPACE:
+			bullets.push_back(new D3DWorldObject("meshes/circle.dae", playerptr->get_x(), playerptr->get_y(), playerptr->get_z()));
 			break;
 	}
 }
@@ -125,13 +131,13 @@ int main(int argc, char **argv) {
 	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
 	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
 	GLint shader_program = make_program(vshader, fshader);
-
-	D3DWorldObject obj1(argv[1], 0.0f, 0.0f, 10.0f);
-	D3DWorldObject obj2("meshes/torus.dae", 0.0f, 0.0f, 5.0f);
-	D3DWorldObject obj3("meshes/torus.dae", -3.0f, 0.0f, 5.0f);
-	D3DWorldObject obj4("meshes/torus.dae", 3.0f, 0.0f, 5.0f);
-
 	glm::mat4 projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+
+	D3DWorldObject player("meshes/monkey.dae", 0.0f, 0.0f, 5.0f);
+	D3DWorldObject obj2("meshes/torus.dae", 0.0f, 0.0f, -5.0f);
+	D3DWorldObject obj3("meshes/torus.dae", -3.0f, 0.0f, -5.0f);
+	D3DWorldObject obj4("meshes/torus.dae", 3.0f, 0.0f, -5.0f);
+	playerptr = &player;
 
 	while(!glfwWindowShouldClose(window)) {
 		_update_fps_counter(window);
@@ -147,14 +153,19 @@ int main(int argc, char **argv) {
 
 		glm::mat4 vp = projection * view;
 
-		obj1.update_coord_x(x);
-		obj1.update_coord_y(y);
-		obj1.update_coord_z(z);
+		player.update_coord_x(x);
+		player.update_coord_y(y);
+		player.update_coord_z(z);
 
-		obj1.draw(shader_program, vp);
+		player.draw(shader_program, vp);
 		obj2.draw(shader_program, vp);
 		obj3.draw(shader_program, vp);
 		obj4.draw(shader_program, vp);
+
+	  	for (std::vector<D3DWorldObject*>::iterator it = bullets.begin() ; it != bullets.end(); ++it) {
+			//(*it)->update_coord_z((*it)->get_z() - 0.10);
+			(*it)->draw(shader_program, vp);
+		}
 
 		printf("%f %f %f\n", x, y, z);
 		glfwPollEvents();

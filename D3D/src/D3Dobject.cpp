@@ -77,6 +77,10 @@ D3DWorldObject::D3DWorldObject(std::string model_filepath, float x, float y, flo
 	glEnableVertexAttribArray(1);
 }
 
+D3DWorldObject::D3DWorldObject(D3DObject *mesh) {
+	this->mesh = mesh;
+}
+
 D3DWorldObject::~D3DWorldObject() {
 	delete mesh;
 }

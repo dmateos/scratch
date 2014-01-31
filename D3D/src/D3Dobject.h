@@ -31,11 +31,17 @@ class D3DWorldObject {
 		GLuint vao;
 
 		D3DWorldObject(std::string model_filepath, float x, float y, float z); 
+		D3DWorldObject(D3DObject *mesh);
+
 		~D3DWorldObject();
 		void draw(GLuint shader_program, glm::mat4 projection);
 		void update_coord_x(float val);
 		void update_coord_y(float val);
 		void update_coord_z(float val);
+
+		float get_x() { return this->x; }
+		float get_y() { return this->y; }
+		float get_z() { return this->z; }
 
 };
 
