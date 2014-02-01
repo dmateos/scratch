@@ -63,36 +63,37 @@ D3DWorldObject *playerptr;
 float x,y,z, xc, yc, zc;
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	float step = 0.5;
 	switch(key) {
 		case GLFW_KEY_W:
-			z -= 0.1;
+			z -= step;
 			break;
 		case GLFW_KEY_S:
-			z += 0.1;
+			z += step;
 			break;
 		case GLFW_KEY_A:
-			x -= 0.1;
+			x -= step;
 			break;
 		case GLFW_KEY_D:
-			x += 0.1;
+			x += step;
 			break;
 		case GLFW_KEY_DOWN:
-			zc -= 0.1;
+			zc -= step;
 			break;
 		case GLFW_KEY_UP:
-			zc += 0.1;
+			zc += step;
 			break;
 		case GLFW_KEY_LEFT:
-			xc -= 0.1;
+			xc -= step;
 			break;
 		case GLFW_KEY_RIGHT:
-			xc += 0.1;
+			xc += step;
 			break;
 		case GLFW_KEY_E:
-			y += 0.1;
+			y += step;
 			break;
 		case GLFW_KEY_Q:
-			y -= 0.1;
+			y -= step;
 			break;
 		case GLFW_KEY_SPACE:
 			bullets.push_back(new D3DWorldObject("meshes/circle.dae",
@@ -145,6 +146,9 @@ int main(int argc, char **argv) {
 	GLint shader_program = make_program(vshader, fshader);
 	glm::mat4 projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
+	//Socketsss
+	Connection server_connection("127.0.0.1");
+
 	D3DWorldObject player("meshes/monkey.dae", 0.0f, 0.0f, 5.0f);
 	D3DWorldObject obj2("meshes/torus.dae", 0.0f, 0.0f, -5.0f);
 	D3DWorldObject obj3("meshes/torus.dae", -3.0f, 0.0f, -5.0f);
@@ -178,11 +182,12 @@ int main(int argc, char **argv) {
 		obj4.draw(shader_program, vp);
 
 	  	for (std::vector<D3DWorldObject*>::iterator it = bullets.begin() ; it != bullets.end(); ++it) {
-			//(*it)->update_coord_z((*it)->get_z() - 0.10);
+		//	(*it)->update_coord_z((*it)->get_z() - 0.10);
 			(*it)->draw(shader_program, vp);
+			//TODO can we cull these as they move too far
 		}
 
-		printf("%f %f %f\n", x, y, z);
+		//printf("%f %f %f\n", x, y, z);
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
