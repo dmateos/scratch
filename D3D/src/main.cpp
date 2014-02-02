@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
 	//Enable the opengl depth buffers for 3d.
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	//glEnable(GL_CULL_FACE);
 
 	// Lets print the version of opengl
 	const GLubyte* renderer = glGetString (GL_RENDERER);

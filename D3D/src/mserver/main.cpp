@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include <vector>
+#include <algorithm>
 #include "network_protocol.h"
 
 struct thread_args {
@@ -36,6 +37,8 @@ void *handle_client(void *carg) {
 	while(true) {
 		if(recv(args->client_sd, &in_packet, sizeof(in_packet), 0) == 0) {
 			printf("client has exited %d\n", args->client_sd);
+			clients.erase(std::remove(clients.begin(), clients.end(), args), clients.end()); //todo mutex 
+			close(args->client_sd);
 			pthread_exit(NULL);
 		}
 
@@ -95,7 +98,6 @@ int main(int argc, char **argv) {
 			printf("could not make thread\n");
 			exit(1);
 		}
-		//TODO reap dead clients
 	}
 	pthread_exit(NULL);
 }
