@@ -38,18 +38,29 @@ Connection::Connection(std::string server) {
 
 void Connection::get_message() {
 	packet in_packet;
+	int err;
 
-	recv(this->sock_fd, (void*)&in_packet, sizeof(in_packet), 0);
+	int len = recv(this->sock_fd, (void*)&in_packet, sizeof(in_packet), 0);
+	err = errno;
 
-	switch(in_packet.cmd) {
-		case HELLO:
-			printf("new hello packet from %d\n", in_packet.oid);
-			break;
-		case NEW_PPOS:
-			break;
-		case UPD_PPOS:
-			break;
-		default:
-			break;
+	if(len < 0) {
+		//TODO handle these.
+		if (err == EAGAIN || err == EWOULDBLOCK) {
+	//		printf("didnt get all the data!\n");
+		} else {
+	//		printf("socket is fucked\n");
+		}
+	} else {
+		switch(in_packet.cmd) {
+			case HELLO:
+				printf("new hello packet from %d\n", in_packet.oid);
+				break;
+			case NEW_PPOS:
+				break;
+			case UPD_PPOS:
+				break;
+			default:
+				break;
+		}
 	}
 }

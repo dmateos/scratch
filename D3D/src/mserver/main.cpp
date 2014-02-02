@@ -40,6 +40,7 @@ void *handle_client(void *carg) {
 		}
 
 		switch(in_packet.cmd) {
+			//TODO send all other users positions for hello
 			case HELLO:
 			case NEW_PPOS:
 			case UPD_PPOS:
