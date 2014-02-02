@@ -19,6 +19,7 @@ class Packet {
 class Connection {
 	public:
 	Connection(std::string server);
+	void get_message();
 };
 
 #endif

@@ -15,7 +15,6 @@ enum commands {
 struct packet {
 	char cmd;
 	int length;
-	void *data;
 };
 
 struct thread_args {

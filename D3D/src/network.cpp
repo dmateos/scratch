@@ -1,4 +1,5 @@
 #include "network.h"
+#include "mserver/network_protocol.h"
 
 //
 // Packet
@@ -25,5 +26,25 @@ Connection::Connection(std::string server) {
 
 	if(connect(sockfd, (const sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
 		printf("could not connect to remote server %s\n", server.c_str());
+	}
+
+	packet hello_packet;
+	hello_packet.cmd = HELLO;
+	hello_packet.length = 0;
+
+	if(send(sockfd, (void*)&hello_packet, sizeof(hello_packet), 0) == sizeof(hello_packet)) {
+		printf("sent hello packet\n");
+	}
+}
+
+void Connection::get_message() {
+	packet in_packet;
+
+	recv(sockfd, &in_packet, sizeof(in_packet), 0);
+
+	switch(in_packet.cmd) {
+		case HELLO:
+			printf("new hello packet\n");
+			break;
 	}
 }

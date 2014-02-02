@@ -15,16 +15,26 @@
 void *handle_client(void *targs) {
 	thread_args *args = (thread_args*)targs;
 	printf("client connection %d\n", args->client_sd);
-	while(true) {
-		packet hello_packet;
-		hello_packet.cmd = HELLO;
-		hello_packet.length = 0;
-		hello_packet.data = NULL;
 
-		if(send(args->client_sd, (void*)&hello_packet, sizeof(hello_packet), 0) == -1) {
-			printf("couldnt hello msg to client\n");
+	packet hello_packet;
+	hello_packet.cmd = HELLO;
+	hello_packet.length = 0;
+
+	if(send(args->client_sd, (void*)&hello_packet, sizeof(hello_packet), 0) == -1) {
+		printf("couldnt hello msg to client\n");
+	}
+
+	packet in_packet;
+	while(true) {
+		recv(args->client_sd, &in_packet, sizeof(in_packet), 0); //TODO check for discon
+		switch(in_packet.cmd) {
+			case HELLO:
+				printf("new hello packet with %d size\n", in_packet.length);
+				break;
+			default:
+				printf("unknown packet with %d size\n", in_packet.length);
+				break;
 		}
-		sleep(10);
 	}
 	pthread_exit(NULL);
 }
