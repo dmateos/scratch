@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 	printf("Renderer: %s\n", renderer);
 	printf ("OpenGL version supported %s\n", version);
 
-	//Compile our vertex and fragment shader and setup a 
+	//Compile our vertex and fragment shader and setup a
 	//perspective matrix (the lense of the camera)
 	GLint vshader = make_shader("shaders/vshader.glsx", GL_VERTEX_SHADER);
 	GLint fshader = make_shader("shaders/fshader.glsx", GL_FRAGMENT_SHADER);
@@ -187,7 +187,8 @@ int main(int argc, char **argv) {
 			//TODO can we cull these as they move too far
 		}
 
-		//printf("%f %f %f\n", x, y, z);
+		server_connection.get_message();
+
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}

@@ -10,11 +10,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 class Connection {
 	public:
-	Connection(std::string server);
-	void get_message();
+		Connection(std::string server);
+		void get_message();
+	private:
+		int sock_fd;
 };
 
 #endif

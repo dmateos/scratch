@@ -20,24 +20,36 @@ Connection::Connection(std::string server) {
 	if(connect(sockfd, (const sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
 		printf("could not connect to remote server %s\n", server.c_str());
 	}
+	else {
+		int flags = fcntl(sockfd,F_GETFL,0);
+		fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
 
-	packet hello_packet;
-	hello_packet.cmd = HELLO;
-	hello_packet.length = 0;
+		packet hello_packet;
+		hello_packet.cmd = HELLO;
+		hello_packet.length = 0;
+		hello_packet.oid = 69;
 
-	if(send(sockfd, (void*)&hello_packet, sizeof(hello_packet), 0) == sizeof(hello_packet)) {
-		printf("sent hello packet\n");
+		if(send(sockfd, (void*)&hello_packet, sizeof(hello_packet), 0) == sizeof(hello_packet)) {
+			printf("sent hello packet\n");
+		}
+		this->sock_fd = sockfd;
 	}
 }
 
 void Connection::get_message() {
 	packet in_packet;
 
-	recv(sockfd, &in_packet, sizeof(in_packet), 0);
+	recv(this->sock_fd, (void*)&in_packet, sizeof(in_packet), 0);
 
 	switch(in_packet.cmd) {
 		case HELLO:
-			printf("new hello packet\n");
+			printf("new hello packet from %d\n", in_packet.oid);
+			break;
+		case NEW_PPOS:
+			break;
+		case UPD_PPOS:
+			break;
+		default:
 			break;
 	}
 }

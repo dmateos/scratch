@@ -12,13 +12,21 @@
 #include <vector>
 #include "network_protocol.h"
 
-void *handle_client(void *targs) {
-	thread_args *args = (thread_args*)targs;
+struct thread_args {
+	int client_sd;
+	sockaddr_in client_addr;
+};
+
+std::vector<thread_args*> clients;
+
+void *handle_client(void *carg) {
+	thread_args *args = (thread_args*)carg;
 	printf("client connection %d\n", args->client_sd);
 
 	packet hello_packet;
 	hello_packet.cmd = HELLO;
 	hello_packet.length = 0;
+	hello_packet.oid = 0;
 
 	if(send(args->client_sd, (void*)&hello_packet, sizeof(hello_packet), 0) == -1) {
 		printf("couldnt hello msg to client\n");
@@ -33,7 +41,15 @@ void *handle_client(void *targs) {
 
 		switch(in_packet.cmd) {
 			case HELLO:
-				printf("new hello packet with %d size from %d\n", in_packet.length, args->client_sd);
+			case NEW_PPOS:
+			case UPD_PPOS:
+				for(std::vector<thread_args*>::iterator it = clients.begin(); it != clients.end(); ++it) {
+					if((*it)->client_sd != args->client_sd) {
+						if(send((*it)->client_sd, &in_packet, sizeof(in_packet), 0) > 0) {
+							printf("sent new packet to %d\n", (*it)->client_sd);
+						}
+					}
+				}
 				break;
 			default:
 				printf("unknown packet with %d size from %d\n", in_packet.length, args->client_sd);
@@ -47,7 +63,6 @@ int main(int argc, char **argv) {
 	int sockfd;
 	struct sockaddr_in servaddr;
 	std::vector<pthread_t> threads;
-	std::vector<thread_args*> clients;
 
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		printf("could not make socket fd\n");

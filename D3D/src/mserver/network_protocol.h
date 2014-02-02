@@ -15,11 +15,8 @@ enum commands {
 struct packet {
 	char cmd;
 	int length;
-};
-
-struct thread_args {
-	int client_sd;
-	sockaddr_in client_addr;
+	int oid;
+	float x, y, z;
 };
 
 #endif
