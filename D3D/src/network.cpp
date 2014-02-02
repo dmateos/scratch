@@ -2,13 +2,6 @@
 #include "mserver/network_protocol.h"
 
 //
-// Packet
-//
-Packet::Packet() {
-
-}
-
-//
 // Connection
 //
 Connection::Connection(std::string server) {

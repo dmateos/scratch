@@ -26,13 +26,17 @@ void *handle_client(void *targs) {
 
 	packet in_packet;
 	while(true) {
-		recv(args->client_sd, &in_packet, sizeof(in_packet), 0); //TODO check for discon
+		if(recv(args->client_sd, &in_packet, sizeof(in_packet), 0) == 0) {
+			printf("client has exited %d\n", args->client_sd);
+			pthread_exit(NULL);
+		}
+
 		switch(in_packet.cmd) {
 			case HELLO:
-				printf("new hello packet with %d size\n", in_packet.length);
+				printf("new hello packet with %d size from %d\n", in_packet.length, args->client_sd);
 				break;
 			default:
-				printf("unknown packet with %d size\n", in_packet.length);
+				printf("unknown packet with %d size from %d\n", in_packet.length, args->client_sd);
 				break;
 		}
 	}
@@ -43,7 +47,7 @@ int main(int argc, char **argv) {
 	int sockfd;
 	struct sockaddr_in servaddr;
 	std::vector<pthread_t> threads;
-	std::vector<thread_args*> args;
+	std::vector<thread_args*> clients;
 
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		printf("could not make socket fd\n");
@@ -70,11 +74,12 @@ int main(int argc, char **argv) {
 		pthread_t thread;
 		int rc = pthread_create(&thread, NULL, handle_client, (void*)arg);
 		threads.push_back(thread);
-		args.push_back(arg);
+		clients.push_back(arg);
 		if(rc) {
 			printf("could not make thread\n");
 			exit(1);
 		}
+		//TODO reap dead clients
 	}
 	pthread_exit(NULL);
 }

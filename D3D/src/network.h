@@ -11,11 +11,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-class Packet {
-	public:
-	Packet();
-};
-
 class Connection {
 	public:
 	Connection(std::string server);
