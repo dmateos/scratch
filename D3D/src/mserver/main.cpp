@@ -1,39 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <strings.h>
-
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include <vector>
-
-enum commands {
-	HELLO = 0x01,
-	GOODBYE,
-
-	NEW_PPOS,
-	UPD_PPOS,
-
-	NEW_OPOS,
-	UPD_OPOS,
-};
-
-struct packet {
-	char cmd;
-	int length;
-	void *data;
-};
-
-struct thread_args {
-	int client_sd;
-	sockaddr_in client_addr;
-};
+#include "network_protocol.h"
 
 void *handle_client(void *targs) {
 	thread_args *args = (thread_args*)targs;
@@ -83,7 +60,7 @@ int main(int argc, char **argv) {
 		pthread_t thread;
 		int rc = pthread_create(&thread, NULL, handle_client, (void*)arg);
 		threads.push_back(thread);
-		args.push_back(arg)
+		args.push_back(arg);
 		if(rc) {
 			printf("could not make thread\n");
 			exit(1);
