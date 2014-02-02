@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <vector>
+
 enum commands {
 	HELLO = 0x01,
 	GOODBYE,
@@ -35,7 +37,7 @@ struct thread_args {
 
 void *handle_client(void *targs) {
 	thread_args *args = (thread_args*)targs;
-	printf("new thread %d\n", args->client_sd);
+	printf("client connection %d\n", args->client_sd);
 	while(true) {
 		packet hello_packet;
 		hello_packet.cmd = HELLO;
@@ -53,8 +55,8 @@ void *handle_client(void *targs) {
 int main(int argc, char **argv) {
 	int sockfd;
 	struct sockaddr_in servaddr;
-	pthread_t threads[32];
-	thread_args args[32];
+	std::vector<pthread_t> threads;
+	std::vector<thread_args*> args;
 
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		printf("could not make socket fd\n");
@@ -67,18 +69,21 @@ int main(int argc, char **argv) {
 	servaddr.sin_port = htons(32000);
 
 	bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-
 	listen(sockfd, 1024);
 
-	for(long i = 0; i < 32; i++) {
+	while(true) {
 		struct sockaddr_in client_addr;
 		socklen_t client_addr_length;
 		int client = accept(sockfd, (struct sockaddr*)&client_addr, &client_addr_length);;
-		printf("new client connection\n");
 
-		args[i].client_sd = client;
-		args[i].client_addr = client_addr;
-		int rc = pthread_create(&threads[i], NULL, handle_client, (void*)&args[i]);
+		thread_args *arg = new thread_args();
+		arg->client_sd = client;
+		arg->client_addr = client_addr;
+
+		pthread_t thread;
+		int rc = pthread_create(&thread, NULL, handle_client, (void*)arg);
+		threads.push_back(thread);
+		args.push_back(arg)
 		if(rc) {
 			printf("could not make thread\n");
 			exit(1);
