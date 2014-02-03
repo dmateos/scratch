@@ -19,6 +19,7 @@ struct thread_args {
 };
 
 std::vector<thread_args*> clients;
+pthread_mutex_t clients_mutex;
 
 void *handle_client(void *carg) {
 	thread_args *args = (thread_args*)carg;
@@ -37,7 +38,11 @@ void *handle_client(void *carg) {
 	while(true) {
 		if(recv(args->client_sd, &in_packet, sizeof(in_packet), 0) == 0) {
 			printf("client has exited %d\n", args->client_sd);
+
+			pthread_mutex_lock(&clients_mutex);
 			clients.erase(std::remove(clients.begin(), clients.end(), args), clients.end()); //todo mutex 
+			pthread_mutex_unlock(&clients_mutex);
+
 			close(args->client_sd);
 			pthread_exit(NULL);
 		}
@@ -47,6 +52,7 @@ void *handle_client(void *carg) {
 			case HELLO:
 			case NEW_PPOS:
 			case UPD_PPOS:
+				pthread_mutex_lock(&clients_mutex);
 				for(std::vector<thread_args*>::iterator it = clients.begin(); it != clients.end(); ++it) {
 					if((*it)->client_sd != args->client_sd) {
 						if(send((*it)->client_sd, &in_packet, sizeof(in_packet), 0) > 0) {
@@ -54,6 +60,7 @@ void *handle_client(void *carg) {
 						}
 					}
 				}
+				pthread_mutex_unlock(&clients_mutex);
 				break;
 			default:
 				printf("unknown packet with %d size from %d\n", in_packet.length, args->client_sd);
@@ -67,6 +74,8 @@ int main(int argc, char **argv) {
 	int sockfd;
 	struct sockaddr_in servaddr;
 	std::vector<pthread_t> threads;
+
+	pthread_mutex_init(&clients_mutex, NULL);
 
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		printf("could not make socket fd\n");
@@ -93,11 +102,16 @@ int main(int argc, char **argv) {
 		pthread_t thread;
 		int rc = pthread_create(&thread, NULL, handle_client, (void*)arg);
 		threads.push_back(thread);
+
+		pthread_mutex_lock(&clients_mutex);
 		clients.push_back(arg);
+		pthread_mutex_unlock(&clients_mutex);
+
 		if(rc) {
 			printf("could not make thread\n");
 			exit(1);
 		}
 	}
+	pthread_mutex_destroy(&clients_mutex);
 	pthread_exit(NULL);
 }
