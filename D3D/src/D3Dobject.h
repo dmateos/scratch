@@ -23,12 +23,14 @@ class D3DObject {
 };
 
 class D3DWorldObject {
-	public:
+	private:
 		float x, y, z;
 		glm::mat4 transform_matrix;
 		D3DObject *mesh;
-		GLuint vbo[2];
 		GLuint vao;
+		GLuint vbo[2];
+	public:
+		int oid;
 
 		D3DWorldObject(std::string model_filepath, float x, float y, float z); 
 		D3DWorldObject(D3DObject *mesh);

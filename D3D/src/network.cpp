@@ -58,6 +58,9 @@ void Connection::get_message() {
 				this->cid = in_packet.cid;
 				break;
 			case NEW_PPOS:
+				printf("new position packet %d %d %f %f %f\n",
+						in_packet.cid, in_packet.oid, in_packet.x, in_packet.y, in_packet.z);
+				new_coords(in_packet.oid, in_packet.x, in_packet.y, in_packet.z); //TODO check if null
 				break;
 			case UPD_PPOS:
 				break;
@@ -69,7 +72,7 @@ void Connection::get_message() {
 
 void Connection::send_coord_update(int oid, float x, float y, float z) {
 	packet out_packet;
-	out_packet.oid = 1;
+	out_packet.oid = oid;
 	out_packet.cmd = NEW_PPOS;
 	out_packet.length = 0;
 	out_packet.cid = this->cid;

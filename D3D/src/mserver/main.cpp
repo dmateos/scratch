@@ -56,7 +56,8 @@ void *handle_client(void *carg) {
 				break;
 			case NEW_PPOS:
 			case UPD_PPOS:
-				printf("got new position packet %d %f %f %f\n", args->client_sd, in_packet.x, in_packet.y, in_packet.z);
+				printf("got new position packet %d %d %f %f %f\n", args->client_sd, 
+									in_packet.oid, in_packet.x, in_packet.y, in_packet.z);
 				pthread_mutex_lock(&clients_mutex);
 				for(std::vector<thread_args*>::iterator it = clients.begin(); it != clients.end(); ++it) {
 					if((*it)->client_sd != args->client_sd) {
@@ -80,6 +81,7 @@ void *handle_client(void *carg) {
 	pthread_mutex_unlock(&clients_mutex);
 	close(args->client_sd);
 	delete args;
+	//TODO also errase thread entry prob.
 	pthread_exit(NULL);
 }
 

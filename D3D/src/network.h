@@ -19,6 +19,8 @@ class Connection {
 		Connection(std::string server);
 		void get_message();
 		void send_coord_update(int oid, float x, float y, float z);
+
+		void(*new_coords)(int oid, float x, float y, float z);
 	private:
 		int sock_fd;
 		int cid;

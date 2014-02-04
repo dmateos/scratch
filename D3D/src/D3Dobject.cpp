@@ -60,6 +60,7 @@ D3DObject::D3DObject(std::string file_name) {
 // D3DWorldObject
 //
 D3DWorldObject::D3DWorldObject(std::string model_filepath, float x, float y, float z) {
+	oid = rand() % 1000;
 	mesh = new D3DObject(model_filepath);
 	transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
 

@@ -106,7 +106,33 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	keypress = true;
 }
 
+std::vector<D3DWorldObject*> network_objects;
+
+void new_coords(int oid, float x, float y, float z) {
+	//Here we must make a new object if it dont exsist
+	//else we update the coords.
+	//TODO destruct
+
+	D3DWorldObject *found_obj = NULL;
+	for (std::vector<D3DWorldObject*>::iterator it = network_objects.begin() ; it != network_objects.end(); ++it) {
+		if((*it)->oid == oid) {
+			found_obj = *it;
+		}
+	}
+
+	if(found_obj == NULL) {
+		D3DWorldObject *obj = new D3DWorldObject("meshes/monkey.dae", x, y ,z);
+		obj->oid = oid;
+		network_objects.push_back(obj);
+	} else {
+		found_obj->update_coord_x(x);
+		found_obj->update_coord_y(y);
+		found_obj->update_coord_z(z);
+	}
+}
+
 int main(int argc, char **argv) {
+	srand(time(NULL));
 	if(!glfwInit()) {
 		fprintf(stderr, "error: could not start glfw3\n");
 		return 1;
@@ -122,6 +148,7 @@ int main(int argc, char **argv) {
 	GLFWwindow *window = glfwCreateWindow(1024, 768, "Hello world", NULL, NULL);
 	if(!window) {
 		fprintf(stderr, "erorr: could not open window with glfw3\n");
+
 		return 1;
 	}
 
@@ -151,6 +178,7 @@ int main(int argc, char **argv) {
 
 	//Socketsss
 	Connection server_connection("127.0.0.1");
+	server_connection.new_coords = &new_coords;
 
 	D3DWorldObject player("meshes/monkey.dae", 0.0f, 0.0f, 5.0f);
 	D3DWorldObject obj2("meshes/torus.dae", 0.0f, 0.0f, -5.0f);
@@ -178,7 +206,8 @@ int main(int argc, char **argv) {
 			player.update_coord_x(x);
 			player.update_coord_y(y);
 			player.update_coord_z(z);
-			server_connection.send_coord_update(0, player.get_x(), player.get_y(), player.get_z());
+			//TODO check for con to see if we should bother doing this.
+			server_connection.send_coord_update(player.oid, player.get_x(), player.get_y(), player.get_z());
 			keypress = false;
 		}
 
@@ -192,6 +221,10 @@ int main(int argc, char **argv) {
 		//	(*it)->update_coord_z((*it)->get_z() - 0.10);
 			(*it)->draw(shader_program, vp);
 			//TODO can we cull these as they move too far
+		}
+
+		for(std::vector<D3DWorldObject*>::iterator it = network_objects.begin(); it != network_objects.end(); ++it) {
+			(*it)->draw(shader_program, vp);
 		}
 
 		server_connection.get_message();
