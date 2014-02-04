@@ -61,6 +61,7 @@ GLint make_program(GLint vshader, GLint fshader) {
 std::vector<D3DWorldObject*> bullets;
 D3DWorldObject *playerptr;
 float x,y,z, xc, yc, zc;
+bool keypress;
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	float step = 0.5;
@@ -102,6 +103,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 								playerptr->get_z()));
 			break;
 	}
+	keypress = true;
 }
 
 int main(int argc, char **argv) {
@@ -172,9 +174,13 @@ int main(int argc, char **argv) {
 		glm::mat4 vp = projection * view;
 
 		//Update the coords of our main charecter
-		player.update_coord_x(x);
-		player.update_coord_y(y);
-		player.update_coord_z(z);
+		if(keypress == true) {
+			player.update_coord_x(x);
+			player.update_coord_y(y);
+			player.update_coord_z(z);
+			server_connection.send_coord_update(0, player.get_x(), player.get_y(), player.get_z());
+			keypress = false;
+		}
 
 		//Render
 		player.draw(shader_program, vp);

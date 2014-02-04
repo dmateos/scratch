@@ -13,10 +13,11 @@ enum commands {
 };
 
 struct packet {
-	char cmd;
-	int length;
-	int oid;
-	float x, y, z;
+	char cmd; /* Command */
+	int length; /* Length, prob not needed. */
+	int oid; /* The object id */
+	int cid; /* Client ID */
+	float x, y, z; /* New coordinates */
 };
 
 #endif

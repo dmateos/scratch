@@ -24,14 +24,6 @@ Connection::Connection(std::string server) {
 		int flags = fcntl(sockfd,F_GETFL,0);
 		fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
 
-		packet hello_packet;
-		hello_packet.cmd = HELLO;
-		hello_packet.length = 0;
-		hello_packet.oid = 69;
-
-		if(send(sockfd, (void*)&hello_packet, sizeof(hello_packet), 0) == sizeof(hello_packet)) {
-			printf("sent hello packet\n");
-		}
 		this->sock_fd = sockfd;
 	}
 }
@@ -54,6 +46,16 @@ void Connection::get_message() {
 		switch(in_packet.cmd) {
 			case HELLO:
 				printf("new hello packet from %d\n", in_packet.oid);
+				packet hello_packet;
+				hello_packet.cmd = HELLO;
+				hello_packet.length = 0;
+				hello_packet.oid = 69;
+				hello_packet.cid = in_packet.cid;
+
+				if(send(this->sock_fd, (void*)&hello_packet, sizeof(hello_packet), 0) == sizeof(hello_packet)) {
+					printf("sent hello packet confirming i am %d\n", hello_packet.cid);
+				}
+				this->cid = in_packet.cid;
 				break;
 			case NEW_PPOS:
 				break;
@@ -62,5 +64,20 @@ void Connection::get_message() {
 			default:
 				break;
 		}
+	}
+}
+
+void Connection::send_coord_update(int oid, float x, float y, float z) {
+	packet out_packet;
+	out_packet.oid = 1;
+	out_packet.cmd = NEW_PPOS;
+	out_packet.length = 0;
+	out_packet.cid = this->cid;
+	out_packet.x = x;
+	out_packet.y = y;
+	out_packet.z = z;
+
+	if(send(this->sock_fd, (void*)&out_packet, sizeof(out_packet), 0) == sizeof(out_packet)) {
+		printf("sent coord update packet\n");
 	}
 }

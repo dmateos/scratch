@@ -29,29 +29,34 @@ void *handle_client(void *carg) {
 	hello_packet.cmd = HELLO;
 	hello_packet.length = 0;
 	hello_packet.oid = 0;
+	hello_packet.cid = args->client_sd;
 
 	if(send(args->client_sd, (void*)&hello_packet, sizeof(hello_packet), 0) == -1) {
 		printf("couldnt hello msg to client\n");
+	} else {
+		printf("sent hello packet to %d\n", args->client_sd);
 	}
 
 	packet in_packet;
 	while(true) {
 		if(recv(args->client_sd, &in_packet, sizeof(in_packet), 0) == 0) {
 			printf("client has exited %d\n", args->client_sd);
-
-			pthread_mutex_lock(&clients_mutex);
-			clients.erase(std::remove(clients.begin(), clients.end(), args), clients.end()); //todo mutex 
-			pthread_mutex_unlock(&clients_mutex);
-
-			close(args->client_sd);
-			pthread_exit(NULL);
+			goto close_connection;
 		}
 
 		switch(in_packet.cmd) {
 			//TODO send all other users positions for hello
 			case HELLO:
+				if(in_packet.cid == args->client_sd) {
+					printf("got back hello packet from %d confirming they are %d\n", in_packet.cid, args->client_sd);
+				} else {
+					printf("got back hello packet, but they did not reply right\n");
+					goto close_connection;
+				}
+				break;
 			case NEW_PPOS:
 			case UPD_PPOS:
+				printf("got new position packet %d %f %f %f\n", args->client_sd, in_packet.x, in_packet.y, in_packet.z);
 				pthread_mutex_lock(&clients_mutex);
 				for(std::vector<thread_args*>::iterator it = clients.begin(); it != clients.end(); ++it) {
 					if((*it)->client_sd != args->client_sd) {
@@ -67,6 +72,14 @@ void *handle_client(void *carg) {
 				break;
 		}
 	}
+
+	close_connection:
+	printf("cleaning up connection for %d\n", args->client_sd);
+	pthread_mutex_lock(&clients_mutex);
+	clients.erase(std::remove(clients.begin(), clients.end(), args), clients.end());
+	pthread_mutex_unlock(&clients_mutex);
+	close(args->client_sd);
+	delete args;
 	pthread_exit(NULL);
 }
 
