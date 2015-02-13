@@ -30,22 +30,18 @@ describe "Triangle" do
   let(:large_triangle) { LargeTriangle.new(data_1) }
   let(:large_triangle_big) { LargeTriangle.new(data_2) }
 
-  it "#best_path gets the best path for a triangle" do
-    expect(large_triangle.best_path_element(0, 0)).to eq(7)
-    expect(large_triangle.best_path_element(1, 0)).to eq(4)
-    expect(large_triangle.best_path_element(2, 1)).to eq(9)
-    expect(large_triangle.best_path_element(1, 1)).to eq(6)
+  it "#best_path_forward gets the best path for a triangle" do
+    expect(large_triangle.best_path_forward(0, 0)).to eq(7)
+    expect(large_triangle.best_path_forward(1, 0)).to eq(4)
+    expect(large_triangle.best_path_forward(2, 1)).to eq(9)
+    expect(large_triangle.best_path_forward(1, 1)).to eq(6)
   end
 
-  it "#best_path_row gets the best path for a row" do
-    expect(large_triangle.best_path_row(0)).to eq(7)
-    expect(large_triangle.best_path_row(1)).to eq(6)
-    expect(large_triangle.best_path_row(2)).to eq(9)
-  end
-
-  it "#best_path_brute_force stupidly find the best path" do
+  it "#best_path_greedy stupidly find the best path" do
     expect(large_triangle.best_path_greedy).to eq(23)
+  end
 
-    expect(large_triangle_big.best_path_greedy).to eq(1074)
+  it "#best_path_topdown" do
+    expect(large_triangle_big.best_path_bottomfirst).to eq(1074)
   end
 end
