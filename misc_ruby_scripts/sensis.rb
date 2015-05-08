@@ -5,7 +5,7 @@ require 'csv'
 require 'pp'
 
 def search(query = "", location = "")
-  apikey = ""
+  apikey = "4kp5sqjy4s3gkhsyspyarwdy"
   endpoint = "http://api.sensis.com.au/ob-20110511/test/search"
   url = "#{endpoint}?key=#{apikey}&query=#{URI.encode(query.to_s)}&location=#{URI.encode(location.to_s)}"
 
@@ -39,6 +39,7 @@ CSV.foreach("acnc.csv", encoding: "windows-1251:utf-8") do |row|
   data_array = [row[0], row[1]]
 
   begin
+    row.each { |d| data_array << d }
     data_array << sensis_data["results"].first["name"]
     data_array << sensis_data["results"].first["primaryContacts"].first["value"]
   rescue
@@ -48,7 +49,7 @@ CSV.foreach("acnc.csv", encoding: "windows-1251:utf-8") do |row|
   already_done_out << "#{row[0]}\n"
   count += 1
   puts "done #{count}"
-  sleep 1
+  sleep 0.6
 end
 
 already_done_out.close

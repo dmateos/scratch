@@ -21,5 +21,6 @@ class TicTacToe
 end
 
 #game = TicTacToe.new(Board.new, [Player.new(:x), RandomAI.new(:o)])
-game = TicTacToe.new(Board.new, [RandomAI.new(:x), RandomAI.new(:o)])
+#game = TicTacToe.new(Board.new, [RandomAI.new(:x), RandomAI.new(:o)])
+game = TicTacToe.new(Board.new, [Player.new(:x), SmartAI.new(:o)])
 game.play

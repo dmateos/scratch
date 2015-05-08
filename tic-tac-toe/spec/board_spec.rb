@@ -46,7 +46,7 @@ describe "Board" do
   describe "checks if there is a winner" do
     let(:board) { Board.new }
 
-    it "detects a winner from horizontal" do
+    it "detects a winner from vertical" do
       [:x, :o].each do |p|
         [0,1,2].each do |n|
           board.reset
@@ -58,7 +58,7 @@ describe "Board" do
       end
     end
 
-    it "detects a winner from vertical" do
+    it "detects a winner from horizontal" do
       [:x, :o].each do |p|
         [0,1,2].each do |n|
           board.reset
