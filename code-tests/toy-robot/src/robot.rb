@@ -20,7 +20,7 @@ class Robot
   def move
     pos = @position.clone
     pos.move
-    @position.move if @table.still_on_surface?(pos) && !@table.collide_with_object?(pos)
+    @position.move if @table.still_on_surface?(pos)
   end
 
   def left

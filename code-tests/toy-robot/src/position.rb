@@ -12,15 +12,15 @@ class Position
   end
 
   def ==(other)
-    @x == other.x && @y == other.y && @orientation == other.orientation
+    x == other.x && y == other.y && orientation == other.orientation
   end
 
   def turn_left
-    self.orientation = {north: :west, west: :south, south: :east, east: :north}[@orientation]
+    @orientation = {north: :west, west: :south, south: :east, east: :north}[orientation]
   end
 
   def turn_right
-    self.orientation = {north: :east, east: :south, south: :west, west: :north}[@orientation]
+    @orientation = {north: :east, east: :south, south: :west, west: :north}[orientation]
   end
 
   def move
@@ -33,12 +33,12 @@ class Position
   end
 
   def to_s
-    "#{@x},#{@y},#{@orientation.upcase}"
+    "#{x},#{y},#{orientation.upcase}"
   end
 
-  def orientation_valid?(orientation = nil)
-    orientation ||= @orientation
-    [:north,  :south, :east, :west].include?(orientation)
+  def orientation_valid?(o = nil)
+    o ||= orientation
+    [:north,  :south, :east, :west].include?(o)
   end
 end
 
